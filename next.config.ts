@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    return [
+      { source: "/", destination: "/projects", permanent: false },
+      {
+        source: "/projects/:projectId",
+        destination: "/projects/:projectId/script",
+        permanent: false,
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

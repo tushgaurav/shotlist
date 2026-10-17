@@ -326,7 +326,7 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | --- | --- |
 | Framework | Next.js 16, React 19, Tailwind 4 (already set up) |
 | UI components | shadcn/ui |
-| Database | Postgres on Neon; local Postgres in Docker for development |
+| Database | Postgres 18 on AWS RDS, verified SSL using the bundled RDS CA (`certs/rds-global-bundle.pem`) |
 | ORM / migrations | Drizzle, drizzle-kit |
 | Auth | Better Auth, email and password |
 | Editor | TipTap |
@@ -360,7 +360,7 @@ Write a real short script in the editor after milestone 2, before building on to
 
 ## 13. Open questions (defaults in bold)
 
-1. Database hosting: **Neon**, Supabase, or self-hosted Postgres?
+1. ~~Database hosting~~ — decided: AWS RDS.
 2. Image storage: **Cloudflare R2**, Vercel Blob, or UploadThing?
 3. Sign-in: **email and password**, magic link, or Google?
 4. Deployment: **Vercel**, or somewhere else?
