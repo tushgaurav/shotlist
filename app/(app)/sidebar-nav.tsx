@@ -1,6 +1,5 @@
 "use client";
 
-import { ClapperboardIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -43,13 +42,12 @@ export function SidebarBrand() {
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" asChild>
           <NavLink href="/projects">
-            <span className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <ClapperboardIcon />
-            </span>
-            <span className="grid flex-1 text-left leading-tight">
-              <span className="truncate font-semibold">Shotlist</span>
-              <span className="truncate text-xs text-sidebar-foreground/70">Scripts & shot lists</span>
-            </span>
+            {/* The SVG is drawn in white, so it's used as a mask and painted in the theme's color. */}
+            <span
+              role="img"
+              aria-label="Shotlist"
+              className="aspect-73/17 h-5 bg-sidebar-foreground mask-[url(/shotlist.svg)] mask-contain mask-no-repeat"
+            />
           </NavLink>
         </SidebarMenuButton>
       </SidebarMenuItem>
