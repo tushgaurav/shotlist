@@ -1,36 +1,22 @@
 "use client";
 
 import type { Editor } from "@tiptap/core";
-import { useEditorState } from "@tiptap/react";
 import { cn } from "cn";
-import { GripVerticalIcon } from "lucide-react";
-import { useState } from "react";
+import { ClapperboardIcon, GripVerticalIcon } from "lucide-react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import { moveScene } from "@/lib/screenplay/editor/commands";
+import type { ShotStore } from "@/lib/shots/shot-store";
 
-type SceneItem = { id: string; number: number; heading: string };
+import { useSceneOutline } from "./scene-outline";
+
 type DropTarget = { id: string; edge: "before" | "after" };
 
 const SCENE_DRAG_TYPE = "application/x-shotlist-scene";
 
-export function SceneSidebar({ editor }: { editor: Editor | null }) {
-  const { scenes, activeId } = useEditorState({
-    editor,
-    selector: ({ editor }) => {
-      const scenes: SceneItem[] = [];
-      let activeId: string | null = null;
-      if (!editor) return { scenes, activeId };
-
-      const cursor = editor.state.selection.from;
-      editor.state.doc.forEach((node, pos) => {
-        const id = node.attrs.sceneId;
-        if (node.type.name !== "sceneHeading" || !id) return;
-        scenes.push({ id, number: scenes.length + 1, heading: node.textContent.trim().toUpperCase() });
-        if (pos < cursor) activeId = id;
-      });
-      return { scenes, activeId };
-    },
-  }) ?? { scenes: [], activeId: null };
+export function SceneSidebar({ editor, shots }: { editor: Editor | null; shots: ShotStore }) {
+  const { scenes, activeId } = useSceneOutline(editor);
+  const shotCounts = useShotCounts(shots);
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -156,6 +142,7 @@ export function SceneSidebar({ editor }: { editor: Editor | null }) {
                     <span className="font-sans text-muted-foreground italic">Untitled scene</span>
                   )}
                 </span>
+                <ShotCount count={shotCounts.get(scene.id) ?? 0} />
                 <GripVerticalIcon
                   aria-hidden
                   className="mt-0.5 size-3.5 shrink-0 cursor-grab text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
@@ -166,5 +153,31 @@ export function SceneSidebar({ editor }: { editor: Editor | null }) {
         </ol>
       )}
     </aside>
+  );
+}
+
+function useShotCounts(store: ShotStore) {
+  const { shots } = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  return useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const shot of shots) {
+      if (shot.sceneId) counts.set(shot.sceneId, (counts.get(shot.sceneId) ?? 0) + 1);
+    }
+    return counts;
+  }, [shots]);
+}
+
+function ShotCount({ count }: { count: number }) {
+  if (count === 0) return null;
+  const label = count === 1 ? "1 shot" : `${count} shots`;
+  return (
+    <span
+      title={label}
+      className="mt-0.5 flex h-4 shrink-0 items-center gap-0.5 rounded-sm bg-muted px-1 text-[0.6875rem] font-normal text-muted-foreground tabular-nums group-hover:bg-background group-aria-[current=location]:bg-background"
+    >
+      <ClapperboardIcon aria-hidden className="size-2.5" />
+      {count}
+      <span className="sr-only">{count === 1 ? " shot" : " shots"}</span>
+    </span>
   );
 }

@@ -93,12 +93,14 @@ export const ShotGroupSection = memo(function ShotGroupSection({
   );
 });
 
-function groupName(group: ShotGroup) {
+export function groupName(group: ShotGroup) {
   if (group.kind === "scene") return `Scene ${group.scene.number}`;
   return group.kind === "unlinked" ? "Unlinked shots" : "Standalone shots";
 }
 
-function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth: number }) {
+/** In the table it's a grid row as wide as the columns; elsewhere (storyboard) a plain bar. */
+export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: number }) {
+  const inGrid = minWidth !== undefined;
   const actions = useShotListActions();
   // The menu traps focus while open, so a shot added from it is focused once it closes.
   const added = useRef<string | null>(null);
@@ -112,9 +114,9 @@ function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth: number }
   );
 
   return (
-    <div role="row" style={{ minWidth }} className="border-b bg-muted/50">
+    <div role={inGrid ? "row" : undefined} style={{ minWidth }} className="border-b bg-muted/50">
       <div
-        role="gridcell"
+        role={inGrid ? "gridcell" : undefined}
         className="sticky left-0 flex w-fit max-w-[calc(100vw-1rem)] items-center gap-3 py-2 pr-3 pl-3"
       >
         {group.kind === "scene" ? (

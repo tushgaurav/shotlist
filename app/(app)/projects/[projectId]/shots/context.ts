@@ -1,7 +1,10 @@
 import { createContext, useContext, type DragEvent } from "react";
 
+import type { ImageUploader } from "@/lib/shots/image-uploader";
 import type { ShotStore } from "@/lib/shots/shot-store";
 import type { ShotScene } from "@/lib/shots/types";
+
+import type { ImageActions } from "./project-shots";
 
 export type DropTarget = {
   groupKey: string;
@@ -11,8 +14,10 @@ export type DropTarget = {
 };
 
 /** Stable for the life of the shot list, so memoised rows don't re-render on every change. */
-export type ShotListActions = {
+export type ShotListActions = ImageActions & {
   store: ShotStore;
+  images: ImageUploader;
+  imagesEnabled: boolean;
   /** The add actions render the new row before returning its ID, but don't focus it. */
   add: (sceneId: string | null) => string;
   addAfter: (shotId: string) => string | null;
@@ -23,9 +28,11 @@ export type ShotListActions = {
   nudge: (shotId: string, direction: -1 | 1, field?: string) => void;
   markReviewed: (sceneId: string) => void;
   requestRenumber: (scene: ShotScene) => void;
+  viewImage: (shotId: string) => void;
   dragStart: (event: DragEvent<HTMLElement>, shotId: string) => void;
   dragEnd: () => void;
-  dragOver: (event: DragEvent<HTMLElement>, groupKey: string, shotId: string | null) => void;
+  /** Rows split before/after by height, storyboard cards by width. */
+  dragOver: (event: DragEvent<HTMLElement>, groupKey: string, shotId: string | null, axis?: "x" | "y") => void;
   drop: (event: DragEvent<HTMLElement>) => void;
 };
 

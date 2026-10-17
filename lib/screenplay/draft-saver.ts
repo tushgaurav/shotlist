@@ -60,6 +60,15 @@ export class DraftSaver {
     return this.save();
   }
 
+  /**
+   * Resolves once everything typed so far has reached the server, or saving failed.
+   * flush() alone can return a save that was already running when more was typed.
+   */
+  async settle() {
+    await this.flush();
+    if (this.dirty && this.status === "saving") await this.flush();
+  }
+
   private schedule(delay: number) {
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => void this.save(), delay);

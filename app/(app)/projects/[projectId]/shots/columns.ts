@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 
 import {
   SHOT_ANGLES,
@@ -13,6 +13,7 @@ import {
   type PresetOption,
 } from "@/lib/shots/presets";
 import type { ShotTextField } from "@/lib/shots/types";
+import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
 
 type Base = { label: string; width: number; defaultVisible: boolean; grow?: boolean };
 
@@ -30,11 +31,13 @@ export type ShotColumn = Base &
     | { kind: "number"; field: "estShootMinutes" }
     | { kind: "check"; field: "vfx" }
     | { kind: "status"; field: "status" }
+    | { kind: "image"; field: "imageId" }
   );
 
 export type ColumnField = ShotColumn["field"];
 
 export const SHOT_COLUMNS: ShotColumn[] = [
+  { field: "imageId", label: "Image", kind: "image", width: 76, defaultVisible: true },
   { field: "description", label: "Description", kind: "longtext", width: 280, grow: true, defaultVisible: true, placeholder: "What we see" },
   { field: "size", label: "Size", kind: "preset", presets: SHOT_SIZES, width: 84, defaultVisible: true },
   { field: "shotType", label: "Type", kind: "preset", presets: SHOT_TYPES, width: 116, defaultVisible: true },
@@ -54,18 +57,8 @@ export const SHOT_COLUMNS: ShotColumn[] = [
 ];
 
 const DEFAULT_VISIBLE = SHOT_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.field);
-const CHANGE_EVENT = "shotlist:columns-change";
 
 const storageKey = (projectId: string) => `shotlist:shot-columns:${projectId}`;
-
-function subscribe(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  window.addEventListener(CHANGE_EVENT, onChange);
-  return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener(CHANGE_EVENT, onChange);
-  };
-}
 
 function parse(raw: string | null): ColumnField[] {
   if (!raw) return DEFAULT_VISIBLE;
@@ -81,19 +74,12 @@ function parse(raw: string | null): ColumnField[] {
 /** Which columns are shown, remembered per project on this device. */
 export function useColumnVisibility(projectId: string) {
   const key = storageKey(projectId);
-  const raw = useSyncExternalStore(
-    subscribe,
-    () => window.localStorage.getItem(key),
-    () => null,
-  );
+  const raw = useLocalStorage(key);
 
   return useMemo(() => {
     const visible = parse(raw);
-    const save = (fields: ColumnField[] | null) => {
-      if (fields) window.localStorage.setItem(key, JSON.stringify(fields));
-      else window.localStorage.removeItem(key);
-      window.dispatchEvent(new Event(CHANGE_EVENT));
-    };
+    const save = (fields: ColumnField[] | null) =>
+      writeLocalStorage(key, fields ? JSON.stringify(fields) : null);
     return {
       columns: SHOT_COLUMNS.filter((c) => visible.includes(c.field)),
       isVisible: (field: ColumnField) => visible.includes(field),
@@ -102,6 +88,16 @@ export function useColumnVisibility(projectId: string) {
       reset: () => save(null),
     };
   }, [key, raw]);
+}
+
+export type ShotListView = "table" | "storyboard";
+
+/** Table or storyboard, remembered per project on this device. */
+export function useShotListView(projectId: string) {
+  const key = `shotlist:shot-view:${projectId}`;
+  const view: ShotListView = useLocalStorage(key) === "storyboard" ? "storyboard" : "table";
+  const setView = (next: ShotListView) => writeLocalStorage(key, next === "table" ? null : next);
+  return [view, setView] as const;
 }
 
 /** Drag handle and label on the left, row menu on the right. */

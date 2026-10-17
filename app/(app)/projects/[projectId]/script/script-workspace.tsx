@@ -13,11 +13,18 @@ import { backupKey, DraftSaver, readBackup, type SaveStatus } from "@/lib/screen
 import { screenplayEditorExtensions } from "@/lib/screenplay/editor/extensions";
 import { toFountain } from "@/lib/screenplay/fountain";
 import type { ScreenplayDocJSON, TitlePage } from "@/lib/screenplay/types";
+import type { ShotListData } from "@/lib/shots/types";
+import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
+import { useMediaQuery } from "@/lib/use-media-query";
 
+import { useProjectShots } from "../shots/project-shots";
 import { SceneSidebar } from "./scene-sidebar";
 import { ScriptToolbar } from "./script-toolbar";
+import { ShotPanel } from "./shot-panel";
 
 import "./screenplay.css";
+
+const SHOT_PANEL_KEY = "shotlist:script-shot-panel";
 
 export type ScriptWorkspaceProps = {
   script: {
@@ -26,10 +33,15 @@ export type ScriptWorkspaceProps = {
     draftRevision: number;
     titlePage: TitlePage;
   };
+  projectId: string;
   projectTitle: string;
+  shots: ShotListData;
+  imagesEnabled: boolean;
 };
 
-export function ScriptWorkspace({ script, projectTitle }: ScriptWorkspaceProps) {
+export function ScriptWorkspace({ script, projectId, projectTitle, shots, imagesEnabled }: ScriptWorkspaceProps) {
+  const projectShots = useProjectShots(projectId, shots);
+  const shotPanel = useShotPanelPreference();
   const [status, setStatus] = useState<SaveStatus>("saved");
   const [titlePage, setTitlePage] = useState(script.titlePage);
   const [saver] = useState(
@@ -125,19 +137,46 @@ export function ScriptWorkspace({ script, projectTitle }: ScriptWorkspaceProps) 
           titlePage={titlePage}
           onTitlePageSaved={setTitlePage}
           onExport={() => editor && exportFountain(editor.getJSON() as ScreenplayDocJSON)}
+          shotPanelOpen={shotPanel.open}
+          onToggleShotPanel={shotPanel.toggle}
         />
         {status === "conflict" && <ConflictBanner />}
       </div>
       <div className="flex flex-1">
-        <SceneSidebar key={editorKey} editor={editor} />
+        <SceneSidebar key={`scenes-${editorKey}`} editor={editor} shots={projectShots.store} />
         <div className="min-w-0 flex-1 bg-muted/60 px-3 py-6 sm:px-8 sm:py-10">
           <div className="screenplay-page">
             {editor ? <EditorContent editor={editor} /> : <PageSkeleton />}
           </div>
         </div>
+        <ShotPanel
+          key={`shots-${editorKey}`}
+          editor={editor}
+          projectId={projectId}
+          shots={projectShots}
+          imagesEnabled={imagesEnabled}
+          saver={saver}
+          onClose={shotPanel.toggle}
+          className={shotPanel.className}
+        />
       </div>
     </div>
   );
+}
+
+/**
+ * The shots panel only fits beside the page on wide screens. Until it's toggled it opens
+ * on the widest ones; the CSS decides that, so the server renders it right.
+ */
+function useShotPanelPreference() {
+  const preference = useLocalStorage(SHOT_PANEL_KEY);
+  const widest = useMediaQuery("(min-width: 96rem)");
+  const open = preference === "open" || (preference === null && widest);
+  return {
+    open,
+    toggle: () => writeLocalStorage(SHOT_PANEL_KEY, open ? "closed" : "open"),
+    className: preference === "closed" ? "hidden" : preference === "open" ? "hidden xl:flex" : "hidden 2xl:flex",
+  };
 }
 
 function exportTitlePage(titlePage: TitlePage, projectTitle: string): TitlePage {

@@ -1,7 +1,6 @@
 "use client";
 
 import { LogOutIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,12 +20,10 @@ function initials(name: string) {
 }
 
 export function UserMenuDropdown({ name, email }: { name: string; email: string }) {
-  const router = useRouter();
-
   async function signOut() {
     await authClient.signOut();
-    router.replace("/sign-in");
-    router.refresh();
+    // A full load drops everything the signed-in pages kept in memory.
+    window.location.replace("/sign-in");
   }
 
   return (

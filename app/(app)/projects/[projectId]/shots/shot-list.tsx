@@ -4,7 +4,6 @@ import { cn } from "cn";
 import { ClapperboardIcon, FileTextIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import {
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -18,91 +17,52 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { downloadText, safeFileName } from "@/lib/download";
-import { newId } from "@/lib/id";
 import { groupShots, sceneChanged, shotListCsv, totalMinutes } from "@/lib/shots/groups";
 import { shotLabel } from "@/lib/shots/numbering";
-import { ShotStore, type ShotApi } from "@/lib/shots/shot-store";
-import type { ShotListData, ShotMutationError, ShotScene } from "@/lib/shots/types";
+import type { ShotListData, ShotScene } from "@/lib/shots/types";
 
-import {
-  createShotAction,
-  deleteShotAction,
-  markSceneReviewedAction,
-  moveShotAction,
-  renumberSceneAction,
-  restoreShotAction,
-  updateShotsAction,
-} from "./actions";
-import { gridTemplate, useColumnVisibility } from "./columns";
+import { gridTemplate, useColumnVisibility, useShotListView } from "./columns";
 import { ShotListContext, type DropTarget, type ShotListActions } from "./context";
 import { focusShotCell, handleGridKeyDown } from "./grid-keys";
+import { imageActions, useIgnoreStrayFileDrops, useProjectShots } from "./project-shots";
 import { RenumberDialog } from "./renumber-dialog";
 import { ShotGroupSection } from "./shot-group";
+import { ImageViewer } from "./shot-image";
 import { ShotListToolbar } from "./shot-list-toolbar";
+import { handleStoryboardKeyDown, StoryboardGroup } from "./storyboard";
 
 const DRAG_TYPE = "application/x-shotlist-shot";
-
-const ERROR_MESSAGES: Record<ShotMutationError | "offline", string> = {
-  offline: "Couldn't reach the server. Your edits will be retried.",
-  unauthorized: "You've been signed out. Sign in again to keep editing.",
-  not_found: "A change couldn't be saved. Reload to see the latest shot list.",
-  invalid: "A change couldn't be saved. Reload to see the latest shot list.",
-};
-
-function serverApi(projectId: string): ShotApi {
-  return {
-    create: (input) => createShotAction(projectId, input),
-    update: (changes) => updateShotsAction(projectId, changes),
-    move: (input) => moveShotAction(projectId, input),
-    remove: (id) => deleteShotAction(projectId, id),
-    restore: (id) => restoreShotAction(projectId, id),
-    renumber: (sceneId) => renumberSceneAction(projectId, sceneId),
-    markReviewed: (sceneId) => markSceneReviewedAction(projectId, sceneId),
-  };
-}
 
 const groupSceneId = (groupKey: string) =>
   groupKey.startsWith("scene:") ? groupKey.slice("scene:".length) : null;
 
-type Props = { projectId: string; projectTitle: string; data: ShotListData };
+type Props = { projectId: string; projectTitle: string; data: ShotListData; imagesEnabled: boolean };
 
-export function ShotList({ projectId, projectTitle, data }: Props) {
-  const [store] = useState(
-    () =>
-      new ShotStore(serverApi(projectId), data, {
-        createId: newId,
-        onError: (error) => toast.error(ERROR_MESSAGES[error], { id: "shot-save-error" }),
-      }),
-  );
+export function ShotList({ projectId, projectTitle, data, imagesEnabled }: Props) {
+  const shots = useProjectShots(projectId, data);
+  const { store, images } = shots;
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const visibility = useColumnVisibility(projectId);
+  const [view, setView] = useShotListView(projectId);
+  useIgnoreStrayFileDrops();
 
-  const gridRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const draggedRef = useRef<string | null>(null);
   const dropRef = useRef<DropTarget | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [renumbering, setRenumbering] = useState<ShotScene | null>(null);
-
-  // The page stays mounted (hidden) after navigating away, so take fresh data when it returns.
-  useEffect(() => store.receive(data), [store, data]);
-
-  useEffect(() => {
-    const warnIfUnsaved = (event: BeforeUnloadEvent) => {
-      if (!store.hasUnsavedChanges) return;
-      store.flush();
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", warnIfUnsaved);
-    return () => {
-      window.removeEventListener("beforeunload", warnIfUnsaved);
-      store.flush();
-    };
-  }, [store]);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   // A dialog left open shouldn't greet you when you come back to the page.
-  useLayoutEffect(() => () => setRenumbering(null), []);
+  useLayoutEffect(
+    () => () => {
+      setRenumbering(null);
+      setViewingId(null);
+    },
+    [],
+  );
 
   const actions = useMemo<ShotListActions>(() => {
     const labelOf = (shotId: string) => {
@@ -120,7 +80,7 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
       return result;
     };
     const focusShot = (shotId: string | null, field = "description") => {
-      if (shotId) focusShotCell(gridRef.current, shotId, field);
+      if (shotId) focusShotCell(containerRef.current, shotId, field);
     };
     const setTarget = (next: DropTarget | null) => {
       const current = dropRef.current;
@@ -141,7 +101,10 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
     };
 
     return {
+      ...imageActions(shots, imagesEnabled, labelOf),
       store,
+      images,
+      imagesEnabled,
       focusShot,
       add: (sceneId) => now(() => store.add(sceneId)),
       addAfter: (shotId) => {
@@ -173,6 +136,7 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
       },
       markReviewed: (sceneId) => store.markReviewed(sceneId),
       requestRenumber: setRenumbering,
+      viewImage: setViewingId,
       dragStart: (event, shotId) => {
         event.dataTransfer.setData(DRAG_TYPE, shotId);
         event.dataTransfer.effectAllowed = "move";
@@ -182,14 +146,16 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
         setDraggingId(shotId);
       },
       dragEnd: endDrag,
-      dragOver: (event, groupKey, shotId) => {
+      dragOver: (event, groupKey, shotId, axis = "y") => {
         if (!draggedRef.current || groupKey === "unlinked") return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
         let side: DropTarget["side"] = "before";
         if (shotId) {
           const rect = event.currentTarget.getBoundingClientRect();
-          if (event.clientY > rect.top + rect.height / 2) side = "after";
+          const past =
+            axis === "x" ? event.clientX > rect.left + rect.width / 2 : event.clientY > rect.top + rect.height / 2;
+          if (past) side = "after";
         }
         setTarget({ groupKey, shotId, side });
       },
@@ -209,7 +175,7 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
         store.move(shotId, sceneId, beforeId);
       },
     };
-  }, [store]);
+  }, [shots, store, images, imagesEnabled]);
 
   const groups = useMemo(() => groupShots(state.scenes, state.shots), [state.scenes, state.shots]);
   const sceneNumbers = useMemo(
@@ -227,6 +193,7 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
   const changedScenes = groups.filter(
     (group) => group.kind === "scene" && sceneChanged(group.scene, group.shots.length),
   ).length;
+  const viewing = viewingId ? (state.shots.find((shot) => shot.id === viewingId) ?? null) : null;
 
   const exportCsv = () => {
     const fileName = `${safeFileName(projectTitle, "Project")} – Shot list.csv`;
@@ -266,64 +233,86 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
         shotCount={state.shots.length}
         minutes={totalMinutes(state.shots)}
         changedScenes={changedScenes}
+        view={view}
+        onViewChange={setView}
         visibility={visibility}
         onExport={exportCsv}
       />
 
-      <div role="grid" aria-label="Shot list" ref={gridRef} className="relative flex-1 pb-24">
+      {view === "storyboard" ? (
         <div
-          role="rowgroup"
-          ref={headerRef}
-          className="sticky top-26 z-20 overflow-hidden border-b bg-muted text-xs font-medium text-muted-foreground"
-        >
-          <div role="row" className="grid" style={template}>
-            <div role="columnheader" className="sticky left-0 z-1 bg-muted">
-              <span className="sr-only">Drag</span>
-            </div>
-            <div role="columnheader" className="sticky left-7 z-1 border-r bg-muted px-2 py-2">
-              Shot
-            </div>
-            {visibility.columns.map((column) => (
-              <div
-                key={column.field}
-                role="columnheader"
-                className={cn("truncate border-r px-2 py-2", column.kind === "number" && "text-right")}
-              >
-                {column.label}
-              </div>
-            ))}
-            <div role="columnheader">
-              <span className="sr-only">Actions</span>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="overflow-x-auto"
-          onScroll={(event) => {
-            if (headerRef.current) headerRef.current.scrollLeft = event.currentTarget.scrollLeft;
-          }}
-          onKeyDown={(event) =>
-            handleGridKeyDown(event, {
-              addAfter: (shotId, field) => actions.focusShot(actions.addAfter(shotId), field),
-              nudge: (shotId, direction, field) => actions.nudge(shotId, direction, field),
-            })
-          }
+          ref={containerRef}
+          aria-label="Storyboard"
+          role="region"
+          className="flex-1 pb-24"
+          onKeyDown={(event) => handleStoryboardKeyDown(event, actions)}
         >
           {groups.map((group) => (
-            <ShotGroupSection
+            <StoryboardGroup
               key={group.key}
               group={group}
-              columns={visibility.columns}
-              template={template}
               sceneNumbers={sceneNumbers}
-              allCharacters={allCharacters}
               dropTarget={dropTarget?.groupKey === group.key ? dropTarget : null}
               draggingId={draggingId}
             />
           ))}
         </div>
-      </div>
+      ) : (
+        <div role="grid" aria-label="Shot list" ref={containerRef} className="relative flex-1 pb-24">
+          <div
+            role="rowgroup"
+            ref={headerRef}
+            className="sticky top-26 z-20 overflow-hidden border-b bg-muted text-xs font-medium text-muted-foreground"
+          >
+            <div role="row" className="grid" style={template}>
+              <div role="columnheader" className="sticky left-0 z-1 bg-muted">
+                <span className="sr-only">Drag</span>
+              </div>
+              <div role="columnheader" className="sticky left-7 z-1 border-r bg-muted px-2 py-2">
+                Shot
+              </div>
+              {visibility.columns.map((column) => (
+                <div
+                  key={column.field}
+                  role="columnheader"
+                  className={cn("truncate border-r px-2 py-2", column.kind === "number" && "text-right")}
+                >
+                  {column.label}
+                </div>
+              ))}
+              <div role="columnheader">
+                <span className="sr-only">Actions</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="overflow-x-auto"
+            onScroll={(event) => {
+              if (headerRef.current) headerRef.current.scrollLeft = event.currentTarget.scrollLeft;
+            }}
+            onKeyDown={(event) =>
+              handleGridKeyDown(event, {
+                addAfter: (shotId, field) => actions.focusShot(actions.addAfter(shotId), field),
+                nudge: (shotId, direction, field) => actions.nudge(shotId, direction, field),
+              })
+            }
+          >
+            {groups.map((group) => (
+              <ShotGroupSection
+                key={group.key}
+                group={group}
+                columns={visibility.columns}
+                template={template}
+                sceneNumbers={sceneNumbers}
+                allCharacters={allCharacters}
+                dropTarget={dropTarget?.groupKey === group.key ? dropTarget : null}
+                draggingId={draggingId}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <RenumberDialog
         scene={renumbering}
@@ -333,6 +322,19 @@ export function ShotList({ projectId, projectTitle, data }: Props) {
           store.renumber(scene.id);
           setRenumbering(null);
         }}
+      />
+      <ImageViewer
+        shot={viewing}
+        label={
+          viewing
+            ? shotLabel(viewing.sceneId ? sceneNumbers.get(viewing.sceneId) : null, viewing.suffix, viewing.customLabel)
+            : ""
+        }
+        images={images}
+        imagesEnabled={imagesEnabled}
+        onUpload={actions.uploadImage}
+        onRemove={actions.removeImage}
+        onClose={() => setViewingId(null)}
       />
     </ShotListContext>
   );

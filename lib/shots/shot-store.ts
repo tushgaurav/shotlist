@@ -30,9 +30,10 @@ const COPIED_FIELDS = [
   "vfx",
   "estShootMinutes",
   "notes",
+  "imageId",
 ] as const satisfies EditableShotField[];
 
-export type ShotListState = ShotListData & { status: ShotSaveStatus };
+export type ShotListState = Omit<ShotListData, "version"> & { status: ShotSaveStatus };
 
 type Move = { id: string; sceneId: string | null; position: string };
 
@@ -70,6 +71,8 @@ export class ShotStore {
   private busy = 0;
   private failure: "offline" | "error" | null = null;
   private received: ShotListData;
+  /** The newest server version this store has seen, from loaded data or its own saves. */
+  private version: number;
   private readonly flushMs: number;
   private readonly retryDelays: number[];
   private readonly offlineRetryMs: number;
@@ -80,7 +83,8 @@ export class ShotStore {
     private readonly options: ShotStoreOptions,
   ) {
     this.received = data;
-    this.state = { ...data, status: "saved" };
+    this.version = data.version;
+    this.state = { scenes: data.scenes, shots: data.shots, status: "saved" };
     this.flushMs = options.flushMs ?? 700;
     this.retryDelays = options.retryDelays ?? [1000, 3000];
     this.offlineRetryMs = options.offlineRetryMs ?? 10_000;
@@ -99,12 +103,14 @@ export class ShotStore {
 
   /**
    * Takes fresh server data, e.g. when the page is shown again after editing the script.
-   * Local work in progress wins: shots are only replaced when nothing is waiting to save.
+   * Local work wins: shots are only replaced when nothing is waiting to save and the data
+   * isn't older than a change this store already saved (it may have been loaded mid-save).
    */
   receive(data: ShotListData) {
     if (data === this.received) return;
     this.received = data;
-    if (!this.hasUnsavedChanges) {
+    if (!this.hasUnsavedChanges && data.version >= this.version) {
+      this.version = data.version;
       this.set({ scenes: data.scenes, shots: data.shots });
       return;
     }
@@ -310,6 +316,7 @@ export class ShotStore {
           return null;
         }
         if (this.failure === "offline") this.failure = null;
+        if (result.version) this.version = Math.max(this.version, result.version);
         return result;
       } catch {
         if (attempt < this.retryDelays.length) {

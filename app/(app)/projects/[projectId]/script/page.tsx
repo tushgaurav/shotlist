@@ -6,6 +6,8 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProject } from "@/lib/dal/projects";
 import { getOrCreateScript } from "@/lib/dal/scripts";
+import { getShotList } from "@/lib/dal/shots";
+import { storageEnabled } from "@/lib/storage/s3";
 
 import { ScriptWorkspace } from "./script-workspace";
 
@@ -30,11 +32,16 @@ export default function ScriptPage({ params }: PageProps<"/projects/[projectId]/
 
 async function ScriptLoader({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const [project, script] = await Promise.all([getProject(projectId), getOrCreateScript(projectId)]);
+  const [project, script, shots] = await Promise.all([
+    getProject(projectId),
+    getOrCreateScript(projectId),
+    getShotList(projectId),
+  ]);
 
   return (
     <ScriptWorkspace
       key={script.id}
+      projectId={projectId}
       projectTitle={project.title}
       script={{
         id: script.id,
@@ -42,6 +49,8 @@ async function ScriptLoader({ params }: { params: Promise<{ projectId: string }>
         draftRevision: script.draftRevision,
         titlePage: script.titlePage,
       }}
+      shots={shots}
+      imagesEnabled={storageEnabled()}
     />
   );
 }

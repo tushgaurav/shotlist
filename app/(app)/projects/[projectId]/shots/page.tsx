@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProject } from "@/lib/dal/projects";
 import { getShotList } from "@/lib/dal/shots";
+import { storageEnabled } from "@/lib/storage/s3";
 
 import { ShotList } from "./shot-list";
 
@@ -22,7 +23,15 @@ export default function ShotsPage({ params }: PageProps<"/projects/[projectId]/s
 async function ShotListLoader({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const [project, data] = await Promise.all([getProject(projectId), getShotList(projectId)]);
-  return <ShotList key={projectId} projectId={projectId} projectTitle={project.title} data={data} />;
+  return (
+    <ShotList
+      key={projectId}
+      projectId={projectId}
+      projectTitle={project.title}
+      data={data}
+      imagesEnabled={storageEnabled()}
+    />
+  );
 }
 
 function ShotListSkeleton() {

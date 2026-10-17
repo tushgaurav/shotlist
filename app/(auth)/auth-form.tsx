@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ function nextPath() {
 }
 
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const isSignUp = mode === "sign-up";
@@ -39,7 +37,8 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         setError(error.message ?? "Something went wrong. Try again.");
         return;
       }
-      router.replace(nextPath());
+      // A full load: the client router may hold redirects to sign-in prefetched while signed out.
+      window.location.replace(nextPath());
     });
   }
 

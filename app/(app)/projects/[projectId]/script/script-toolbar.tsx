@@ -2,7 +2,14 @@
 
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
-import { BoldIcon, DownloadIcon, ItalicIcon, KeyboardIcon, UnderlineIcon } from "lucide-react";
+import {
+  BoldIcon,
+  DownloadIcon,
+  ItalicIcon,
+  KeyboardIcon,
+  PanelRightIcon,
+  UnderlineIcon,
+} from "lucide-react";
 
 import { SaveStatusIndicator, type SaveTone } from "@/components/save-status";
 import { Button } from "@/components/ui/button";
@@ -27,9 +34,18 @@ type Props = {
   titlePage: TitlePage;
   onTitlePageSaved: (titlePage: TitlePage) => void;
   onExport: () => void;
+  shotPanelOpen: boolean;
+  onToggleShotPanel: () => void;
 };
 
-export function ScriptToolbar({ editor, status, onExport, ...titlePageProps }: Props) {
+export function ScriptToolbar({
+  editor,
+  status,
+  onExport,
+  shotPanelOpen,
+  onToggleShotPanel,
+  ...titlePageProps
+}: Props) {
   const isMac = useIsMac();
   const state = useEditorState({
     editor,
@@ -115,6 +131,21 @@ export function ScriptToolbar({ editor, status, onExport, ...titlePageProps }: P
               <KeyboardIcon />
             </Button>
           </ShortcutsDialog>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Shots for this scene"
+                aria-pressed={shotPanelOpen}
+                className="hidden aria-pressed:bg-muted xl:inline-flex"
+                onClick={onToggleShotPanel}
+              >
+                <PanelRightIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{shotPanelOpen ? "Hide" : "Show"} shots for this scene</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

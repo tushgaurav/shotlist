@@ -125,7 +125,7 @@ projects
   title               text
   kind                text        -- short | feature | commercial | music_video | other
   created_at          timestamptz
-  updated_at          timestamptz
+  updated_at          timestamptz -- also set by every shot change; the shot list's version stamp
   archived_at         timestamptz null
 
 scripts                             -- one per project in v1 (unique project_id)
@@ -186,7 +186,7 @@ shots
   est_shoot_minutes   integer null
   status              text        -- planned | shot | omitted
   notes               text null
-  image_id            text → assets.id, null       -- pass 2
+  image_id            text → assets.id, null       -- cleared if the asset row is deleted
   setup_id            text → setups.id, null       -- milestone 5; null = not scheduled
   setup_position      text null   -- order within its setup (shooting order)
   deleted_at          timestamptz null  -- soft delete, so Undo can bring a shot back
@@ -212,14 +212,15 @@ setups
   est_setup_minutes   integer null
   notes               text null
 
-assets
+assets                              -- uploaded images; the files live in S3
   id                  text pk
   project_id          text → projects.id
-  storage_key         text
-  content_type        text
-  width               integer null
-  height              integer null
-  byte_size           integer
+  content_type        text        -- image/webp or image/jpeg (re-encoded in the browser)
+  storage_key         text        -- full size, longest edge ≤ 2048 px
+  thumb_key           text        -- thumbnail, longest edge ≤ 640 px
+  width               integer     -- of the full-size copy
+  height              integer
+  byte_size           integer     -- both copies together
   created_at          timestamptz
 ```
 
@@ -254,7 +255,7 @@ So a conversation is Enter, type, Enter, type…, and pressing Enter on an empty
 
 ### Layout
 
-Rendered as pages on screen in Courier Prime 12 pt with standard screenplay margins, so it looks like the printed page. A sidebar lists scenes (number, heading, shot count); click to jump, drag to move a whole scene. A side panel shows the shot list for the scene the cursor is in.
+Rendered as pages on screen in Courier Prime 12 pt with standard screenplay margins, so it looks like the printed page. A sidebar lists scenes (number, heading, shot count); click to jump, drag to move a whole scene. A side panel shows the shot list for the scene the cursor is in (see section 7).
 
 ### Saving
 
@@ -275,15 +276,15 @@ Courier is monospaced, so pagination is deterministic line counting: standard el
 
 ## 7. Shot list
 
-Built in two passes. Pass 1 is the table; pass 2 adds images (Amazon S3), the storyboard view, the script side panel and shot counts in the script's scene sidebar.
+Built in two passes, both done. Pass 1 is the table; pass 2 adds images (Amazon S3), the storyboard view, the script side panel and shot counts in the script's scene sidebar.
 
 ### Table view (default)
 
 - Grouped by scene in story order. Each group header shows scene number, heading, shot count, estimated minutes and the "scene changed" badge with a "Mark reviewed" button. A scene menu has Add shot and Renumber shots.
 - Standalone shots in a group at the end. Unlinked shots (scene removed) in a group at the top with a warning; the menu's "Move to" puts them back in a scene.
 - The label column and the column header stay visible while scrolling. Omitted shots are dimmed and left out of time totals.
-- Show/hide columns; the choice is remembered per project in `localStorage`. Shown by default: description, size, type, movement, lens, subjects, minutes, status. Hidden by default: angle, camera, frame rate, equipment, sound, location note, VFX, notes.
-- Toolbar: total shots and estimated time, how many scenes changed, save status, columns, CSV export, keyboard shortcuts.
+- Show/hide columns; the choice is remembered per project in `localStorage`. Shown by default: image, description, size, type, movement, lens, subjects, minutes, status. Hidden by default: angle, camera, frame rate, equipment, sound, location note, VFX, notes.
+- Toolbar: total shots and estimated time, how many scenes changed, save status, Table/Storyboard switch, columns (table only), CSV export, keyboard shortcuts. The view choice is remembered per project in `localStorage`.
 
 **Editing**
 
@@ -295,12 +296,29 @@ Built in two passes. Pass 1 is the table; pass 2 adds images (Amazon S3), the st
 **Saving**
 
 - Changes show immediately. Edits are batched and saved about 0.7 s after typing stops; adds, moves and deletes are sent in order through one queue.
-- Failed saves are retried after 1 s and 3 s, then every 10 s with the status "Offline — retrying". Server rejections show "Some changes weren't saved" and a toast. Leaving the page with unsaved changes asks first.
-- The page stays mounted when you switch tabs in the project, so it takes fresh scenes from the server each time you come back (e.g. after editing the script).
+- Failed saves are retried after 1 s and 3 s, then every 10 s with the status "Offline — retrying". Server rejections show "Some changes weren't saved" and a toast. Leaving the page with unsaved changes, or while an image is uploading, asks first.
+- The shot list and the script's shot panel share one in-memory store per project, so a change in one shows in the other at once.
+- Pages stay mounted when you switch tabs in the project, so they take fresh data from the server each time you come back (e.g. scenes written meanwhile). Every shot change bumps `projects.updated_at` and returns it; fresh data only replaces the local shots when nothing is waiting to save and it isn't older than the last change this tab saved. Scenes are always taken.
 
 ### Storyboard view
 
-Cards in the same order: image, label, size and movement, description. Images can be uploaded, dropped or pasted.
+- Cards grouped by scene in the same order: a 16:9 image, label, status, size · type · movement · lens, and an editable description. Each group ends with an "Add shot" card.
+- Drag cards to reorder or move them to another scene; **Alt+arrows** move the focused card; **Esc** leaves the description. The card menu matches the table's row menu.
+
+### Images
+
+- One image per shot. Add one by clicking an empty thumbnail, dropping a file on it, or pasting onto a shot (a paste into a text field with text in it stays a text paste). A local preview with a spinner shows while it uploads. Clicking a thumbnail opens a viewer with Replace and Remove; Remove only unlinks the image, with Undo.
+- The browser re-encodes every image first: a full copy up to 2048 px on the long edge and a thumbnail up to 640 px, as WebP (JPEG where the browser can't encode WebP), with transparency flattened onto white. Sources up to 40 MB and 20,000 px are accepted; SVG isn't.
+- **Upload:** a Server Action checks ownership and returns two presigned POST forms whose policy fixes the key and content type and caps the size (8 MB full, 1 MB thumbnail), valid for 10 minutes. The browser posts both files straight to S3, then a second action checks both objects are there with the right type and records the `assets` row. Confirming twice is harmless.
+- **Display:** `/api/assets/[assetId]/[variant]` checks ownership and redirects to a signed S3 URL. URLs are signed at the start of each hour and valid for two, so the same URL (and the browser's cached copy) is reused all hour; the redirect is `private` and cached until the next hour starts.
+- The bucket stays private. It needs a CORS rule allowing POST from the app's origin, and the app's IAM user needs `s3:PutObject` and `s3:GetObject` on the bucket's objects. Without the S3 settings the app still runs and says image uploads aren't set up.
+
+### Script side panel
+
+- On screens 1280 px and wider, the script page can show the shots of the scene the cursor is in: thumbnail, label (from the live scene number), status, specs and an editable description. Images can be added there the same ways.
+- A field at the bottom adds a shot to that scene. If the scene was only just typed, the script is saved first, because shots can only belong to saved scenes.
+- Open by default from 1536 px; the toggle in the toolbar is remembered in `localStorage`.
+- The scene sidebar shows each scene's shot count.
 
 ### Export
 
@@ -326,24 +344,27 @@ app/
   (app)/projects/[projectId]/layout.tsx                project nav: Script · Shots · Schedule
   (app)/projects/[projectId]/script/page.tsx           editor
   (app)/projects/[projectId]/script/versions/page.tsx  history and compare (?a=&b=)
-  (app)/projects/[projectId]/shots/page.tsx            table or storyboard (?view=)
+  (app)/projects/[projectId]/shots/page.tsx            table or storyboard
   (app)/projects/[projectId]/schedule/page.tsx         shoot-day planning
   (app)/projects/[projectId]/schedule/[dayId]/page.tsx on-set view
   api/auth/[...all]/route.ts                           Better Auth
   api/scripts/[scriptId]/draft/route.ts                autosave
-  api/uploads/route.ts                                 signed upload URLs
-  api/projects/[projectId]/export/route.ts             CSV, PDF, Fountain
+  api/assets/[assetId]/[variant]/route.ts              image redirect to S3 (owner only)
+  api/projects/[projectId]/export/route.ts             PDF, Fountain
 lib/
   db/            Drizzle schema and client
   dal/           server-only data access; every function checks session and ownership
   screenplay/    TipTap nodes, keyboard flow, sceneId plugin, scene extraction,
                  Fountain import/export — shared by browser and server
-  shots/         shot types, label numbering, presets, grouping, CSV, the client shot store
+  shots/         shot types, label numbering, presets, grouping, CSV, the client shot store,
+                 image uploader
+  images/        browser-side resizing and encoding
+  storage/       server-only S3 client: presigned POSTs, object checks, signed URLs
   diff/          scene-level and word-level comparison
 proxy.ts         optimistic redirect to sign-in only (Next 16's name for middleware)
 ```
 
-- Mutations are Server Actions that call the data access layer, except autosave and uploads.
+- Mutations are Server Actions that call the data access layer, except autosave. Image bytes go from the browser straight to S3; the upload actions only sign and confirm.
 - Scene extraction runs on the server from the saved JSON, using the same code as the editor. The server's result is the source of truth for the `scenes` table.
 
 ## 10. Stack
@@ -359,10 +380,12 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | Shot table | Hand-rolled CSS grid, native HTML drag and drop, fractional-indexing |
 | Fountain import | fountain-js |
 | Diffs | diff (jsdiff) |
-| Images | Amazon S3 |
+| Images | Amazon S3, private bucket, AWS SDK v3 |
 | PDF | @react-pdf/renderer |
 | Validation | zod |
-| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store |
+| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader |
+
+S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` (not the `AWS_*` names, which Vercel reserves). `S3_ENDPOINT` is optional, for S3-compatible services such as MinIO, R2 or a local fake.
 
 ## 11. Milestones
 
@@ -371,7 +394,7 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 3. **Versions** — save version, history, read-only view, compare (scene and word level), restore with safety snapshot, Fountain import.
 4. **Shot list**
    - Pass 1 (done): table view, inline editing, reordering, numbering, unlinked shots, "scene changed" badges, CSV export.
-   - Pass 2: images on S3, storyboard view, script side panel, shot counts in the scene sidebar.
+   - Pass 2 (done): images on S3, storyboard view, script side panel, shot counts in the scene sidebar.
 5. **Planning** — shoot days, setups, drag-to-schedule, time totals, PDF export, on-set view.
 6. **Polish** — pagination and eighths, screenplay PDF export, lock scene numbers, revision colors.
 

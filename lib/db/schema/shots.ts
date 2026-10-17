@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { ShotStatus } from "../../shots/types";
+import { assets } from "./assets";
 import { projects } from "./projects";
 import { scenes, scripts } from "./scripts";
 
@@ -45,6 +46,7 @@ export const shots = pgTable(
     estShootMinutes: integer("est_shoot_minutes"),
     status: text("status").$type<ShotStatus>().default("planned").notNull(),
     notes: text("notes"),
+    imageId: text("image_id").references(() => assets.id, { onDelete: "set null" }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

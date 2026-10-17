@@ -3,7 +3,7 @@ import "server-only";
 import { and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { projects, scenes, scripts, shots } from "@/lib/db/schema";
+import { assets, projects, scenes, scripts, shots } from "@/lib/db/schema";
 import { blocksFromJSON } from "@/lib/screenplay/blocks";
 import { sceneCharacters } from "@/lib/screenplay/scenes";
 import { nextSuffix, suffixAt } from "@/lib/shots/numbering";
@@ -39,10 +39,18 @@ const shotColumns = {
   estShootMinutes: shots.estShootMinutes,
   status: shots.status,
   notes: shots.notes,
+  imageId: shots.imageId,
 };
 
 export async function getShotList(projectId: string): Promise<ShotListData> {
   const script = await getOrCreateScript(projectId);
+
+  // Read before the shots, so the shots are at least as new as the version says.
+  const [project] = await db
+    .select({ updatedAt: projects.updatedAt })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
 
   const [sceneRows, shotRows] = await Promise.all([
     db
@@ -77,6 +85,7 @@ export async function getShotList(projectId: string): Promise<ShotListData> {
         characters: characters.get(scene.id) ?? [],
       })),
     shots: shotRows.sort(compareShots),
+    version: project.updatedAt.getTime(),
   };
 }
 
@@ -98,12 +107,13 @@ async function withProject<T extends object>(
   if (!user) return unauthorized;
 
   return db.transaction(async (tx) => {
-    // Touching updated_at takes the row lock and keeps the projects list in recent order.
+    // Touching updated_at takes the row lock, keeps the projects list in recent order and
+    // versions the shot list. clock_timestamp() is read after the lock is taken.
     const [project] = await tx
       .update(projects)
-      .set({ updatedAt: new Date() })
+      .set({ updatedAt: sql`clock_timestamp()` })
       .where(and(eq(projects.id, projectId), eq(projects.ownerId, user.id)))
-      .returning({ id: projects.id });
+      .returning({ updatedAt: projects.updatedAt });
     if (!project) return notFound;
 
     const [script] = await tx
@@ -113,7 +123,8 @@ async function withProject<T extends object>(
       .limit(1);
     if (!script) return notFound;
 
-    return work(tx, script.id);
+    const result = await work(tx, script.id);
+    return result.ok ? { ...result, version: project.updatedAt.getTime() } : result;
   });
 }
 
@@ -187,12 +198,21 @@ export async function createShot(
   });
 }
 
-/** Shots that were deleted in the meantime are skipped. */
+/** Shots that were deleted in the meantime are skipped. Images must belong to the project. */
 export async function updateShots(
   projectId: string,
   changes: { id: string; patch: ShotPatch }[],
 ): Promise<ShotMutation> {
-  return withProject(projectId, async (tx, scriptId) => {
+  return withProject<object>(projectId, async (tx, scriptId) => {
+    const imageIds = [...new Set(changes.flatMap(({ patch }) => (patch.imageId ? [patch.imageId] : [])))];
+    if (imageIds.length > 0) {
+      const found = await tx
+        .select({ id: assets.id })
+        .from(assets)
+        .where(and(eq(assets.projectId, projectId), inArray(assets.id, imageIds)));
+      if (found.length !== imageIds.length) return invalid;
+    }
+
     const touched = new Set<string>();
     for (const { id, patch } of changes) {
       const [row] = await tx

@@ -15,6 +15,9 @@
     "auth:generate": "npx auth@latest generate --config lib/auth.ts --output lib/db/schema/auth.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@aws-sdk/s3-presigned-post": "^3.1152.0",
+    "@aws-sdk/s3-request-presigner": "^3.1152.0",
     "@tiptap/core": "^3.32.0",
     "@tiptap/extension-bold": "^3.32.0",
     "@tiptap/extension-document": "^3.32.0",

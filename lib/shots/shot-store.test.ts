@@ -42,6 +42,7 @@ function setup(data?: Partial<ShotListData>) {
   const initial: ShotListData = {
     scenes: [scene("s1", "1"), scene("s2", "2")],
     shots: [shot("a", "s1", "A"), shot("b", "s1", "B"), shot("c", "s2", "A")],
+    version: 1,
     ...data,
   };
   const { api, calls } = fakeApi();
@@ -209,9 +210,32 @@ describe("ShotStore.receive", () => {
     store.receive({
       scenes: [scene("s1", "4", { heading: "EXT. NEW - NIGHT" })],
       shots: [],
+      version: 2,
     });
     const snapshot = store.getSnapshot();
     expect(snapshot.shots).toHaveLength(initial.shots.length);
     expect(snapshot.scenes.map((s) => [s.number, s.heading])).toEqual([["4", "EXT. NEW - NIGHT"]]);
+  });
+
+  it("ignores shots loaded before its own last save landed", async () => {
+    const { store, api, initial } = setup();
+    api.update.mockResolvedValueOnce({ ok: true, version: 5 });
+    store.update("a", { description: "Saved" });
+    await vi.runAllTimersAsync();
+
+    store.receive({ ...initial, scenes: [scene("s1", "7")], version: 3 });
+    const snapshot = store.getSnapshot();
+    expect(snapshot.shots.find((s) => s.id === "a")?.description).toBe("Saved");
+    expect(snapshot.scenes.map((s) => s.number)).toEqual(["7"]);
+  });
+
+  it("takes shots loaded after its last save", async () => {
+    const { store, api, initial } = setup();
+    api.update.mockResolvedValueOnce({ ok: true, version: 5 });
+    store.update("a", { description: "Saved" });
+    await vi.runAllTimersAsync();
+
+    store.receive({ ...initial, shots: [], version: 5 });
+    expect(store.getSnapshot().shots).toEqual([]);
   });
 });

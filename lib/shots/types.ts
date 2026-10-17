@@ -48,9 +48,10 @@ export type ShotRecord = {
   estShootMinutes: number | null;
   status: ShotStatus;
   notes: string | null;
+  imageId: string | null;
 };
 
-export type EditableShotField = ShotTextField | "vfx" | "estShootMinutes" | "status";
+export type EditableShotField = ShotTextField | "vfx" | "estShootMinutes" | "status" | "imageId";
 export type ShotPatch = Partial<Pick<ShotRecord, EditableShotField>>;
 
 export type ShotScene = {
@@ -70,11 +71,16 @@ export const SHOT_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 export type ShotListData = {
   scenes: ShotScene[];
   shots: ShotRecord[];
+  /**
+   * When the project's shots last changed on the server (ms). Data older than a change this
+   * browser already saved is stale.
+   */
+  version: number;
 };
 
 export type ShotMutationError = "unauthorized" | "not_found" | "invalid";
 export type ShotMutation<T extends object = object> =
-  | ({ ok: true } & T)
+  | ({ ok: true; version?: number } & T)
   | { ok: false; error: ShotMutationError };
 
 export const EMPTY_SHOT: Omit<ShotRecord, "id" | "sceneId" | "position" | "suffix"> = {
@@ -95,6 +101,7 @@ export const EMPTY_SHOT: Omit<ShotRecord, "id" | "sceneId" | "position" | "suffi
   estShootMinutes: null,
   status: "planned",
   notes: null,
+  imageId: null,
 };
 
 type Ordered = { position: string; id: string };

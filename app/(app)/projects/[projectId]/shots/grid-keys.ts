@@ -50,6 +50,8 @@ export function handleGridKeyDown(event: KeyboardEvent<HTMLElement>, actions: Gr
       focusControl(next);
     }
   } else if (key === "Enter" && !shiftKey) {
+    // Buttons (the image cell) keep Enter for pressing them.
+    if (control instanceof HTMLButtonElement) return;
     event.preventDefault();
     const next = row.nextElementSibling;
     if (next instanceof HTMLElement && next.matches(ROW)) focusIn(next, field);

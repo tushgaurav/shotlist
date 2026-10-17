@@ -1,6 +1,6 @@
 "use client";
 
-import { Columns3Icon, DownloadIcon, KeyboardIcon } from "lucide-react";
+import { Columns3Icon, DownloadIcon, KeyboardIcon, LayoutGridIcon, TableIcon } from "lucide-react";
 
 import { SaveStatusIndicator, type SaveTone } from "@/components/save-status";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { shortcutLabel, useIsMac } from "@/lib/keyboard";
 import { formatMinutes } from "@/lib/shots/groups";
 import type { ShotSaveStatus } from "@/lib/shots/shot-store";
 
-import { SHOT_COLUMNS, type useColumnVisibility } from "./columns";
+import { SHOT_COLUMNS, type ShotListView, type useColumnVisibility } from "./columns";
 
 const STATUS: Record<ShotSaveStatus, { tone: SaveTone; label: string }> = {
   saved: { tone: "saved", label: "Saved" },
@@ -34,14 +34,46 @@ type Props = {
   shotCount: number;
   minutes: number;
   changedScenes: number;
+  view: ShotListView;
+  onViewChange: (view: ShotListView) => void;
   visibility: ReturnType<typeof useColumnVisibility>;
   onExport: () => void;
 };
 
-export function ShotListToolbar({ status, shotCount, minutes, changedScenes, visibility, onExport }: Props) {
+export function ShotListToolbar({
+  status,
+  shotCount,
+  minutes,
+  changedScenes,
+  view,
+  onViewChange,
+  visibility,
+  onExport,
+}: Props) {
   return (
     <div className="sticky top-14 z-30 border-b bg-background/95 backdrop-blur">
       <div className="flex h-12 items-center gap-3 px-3 sm:px-4">
+        <div role="group" aria-label="View" className="flex shrink-0 rounded-lg border p-0.5">
+          {(
+            [
+              ["table", "Table", TableIcon],
+              ["storyboard", "Storyboard", LayoutGridIcon],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <Button
+              key={value}
+              variant="ghost"
+              size="xs"
+              aria-pressed={view === value}
+              onClick={() => onViewChange(value)}
+              className="aria-pressed:bg-muted aria-pressed:text-foreground"
+            >
+              <Icon data-icon="inline-start" />
+              {label}
+            </Button>
+          ))}
+        </div>
+
         <p className="truncate text-sm text-muted-foreground">
           <span className="font-medium text-foreground tabular-nums">{shotCount}</span>{" "}
           {shotCount === 1 ? "shot" : "shots"}
@@ -58,52 +90,63 @@ export function ShotListToolbar({ status, shotCount, minutes, changedScenes, vis
           <SaveStatusIndicator status={status} {...STATUS[status]} />
           <Separator orientation="vertical" className="mx-1.5 h-5!" />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Columns3Icon data-icon="inline-start" />
-                Columns
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Show columns</DropdownMenuLabel>
-              {SHOT_COLUMNS.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.field}
-                  checked={visibility.isVisible(column.field)}
-                  onSelect={(event) => event.preventDefault()}
-                  onCheckedChange={() => visibility.toggle(column.field)}
-                >
-                  {column.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={visibility.reset}>Reset to default</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {view === "table" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Columns3Icon data-icon="inline-start" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Show columns</DropdownMenuLabel>
+                {SHOT_COLUMNS.map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.field}
+                    checked={visibility.isVisible(column.field)}
+                    onSelect={(event) => event.preventDefault()}
+                    onCheckedChange={() => visibility.toggle(column.field)}
+                  >
+                    {column.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={visibility.reset}>Reset to default</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <Button variant="ghost" size="sm" disabled={shotCount === 0} onClick={onExport}>
             <DownloadIcon data-icon="inline-start" />
             Export CSV
           </Button>
 
-          <ShortcutsPopover />
+          <ShortcutsPopover view={view} />
         </div>
       </div>
     </div>
   );
 }
 
-function ShortcutsPopover() {
-  const isMac = useIsMac();
-  const rows: [string, string[][]][] = [
+const SHORTCUTS: Record<ShotListView, [string, string[][]][]> = {
+  table: [
     ["Move between cells", [["↑"], ["↓"], ["←"], ["→"]]],
     ["Next row, or a new shot after the last one", [["Enter"]]],
     ["New line in description and notes", [["Shift", "Enter"]]],
     ["Move the shot up or down", [["Alt", "↑"], ["Alt", "↓"]]],
     ["Show suggestions", [["Ctrl", "Space"]]],
+    ["Paste an image onto the shot", [["Mod", "V"]]],
     ["Leave the cell", [["Esc"]]],
-  ];
+  ],
+  storyboard: [
+    ["Move the shot earlier or later", [["Alt", "←"], ["Alt", "→"]]],
+    ["Paste an image onto the shot", [["Mod", "V"]]],
+    ["Leave the description", [["Esc"]]],
+  ],
+};
+
+function ShortcutsPopover({ view }: { view: ShotListView }) {
+  const isMac = useIsMac();
 
   return (
     <Popover>
@@ -115,7 +158,7 @@ function ShortcutsPopover() {
       <PopoverContent align="end" className="w-80">
         <p className="font-medium">Keyboard shortcuts</p>
         <dl className="grid gap-2 text-sm">
-          {rows.map(([action, combos]) => (
+          {SHORTCUTS[view].map(([action, combos]) => (
             <div key={action} className="flex items-center justify-between gap-4">
               <dt className="text-muted-foreground">{action}</dt>
               <dd className="flex shrink-0 gap-1">

@@ -114,4 +114,22 @@ describe("DraftSaver", () => {
     await saver.flush();
     expect(requests).toHaveLength(1);
   });
+
+  it("settle waits for edits made while a save was running", async () => {
+    let release!: () => void;
+    const { saver, edit, requests } = setup((body) =>
+      body.revision === 3
+        ? new Promise((resolve) => (release = () => resolve(ok(4))))
+        : ok(body.revision + 1),
+    );
+    edit("a");
+    void saver.flush();
+    edit("ab");
+
+    const settled = saver.settle();
+    release();
+    await settled;
+    expect(requests.map((r) => r.draft)).toEqual([{ text: "a" }, { text: "ab" }]);
+    expect(saver.hasUnsavedChanges).toBe(false);
+  });
 });

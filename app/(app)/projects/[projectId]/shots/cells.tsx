@@ -99,7 +99,7 @@ export function CheckCell({ value, label, onChange }: CellProps<boolean>) {
   );
 }
 
-const STATUS_DOTS: Record<ShotStatus, string> = {
+export const STATUS_DOTS: Record<ShotStatus, string> = {
   planned: "border border-muted-foreground/60",
   shot: "bg-emerald-500",
   omitted: "bg-muted-foreground/40",

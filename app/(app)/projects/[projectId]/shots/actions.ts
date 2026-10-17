@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { confirmImageUpload, startImageUpload } from "@/lib/dal/assets";
 import {
   createShot,
   deleteShot,
@@ -12,6 +13,7 @@ import {
   updateShots,
 } from "@/lib/dal/shots";
 import { SCENE_ID_PATTERN } from "@/lib/screenplay/types";
+import { IMAGE_TYPES, VARIANT_MAX_EDGE, type ImageType } from "@/lib/shots/images";
 import { isValidPosition } from "@/lib/shots/positions";
 import {
   SHOT_ID_PATTERN,
@@ -52,6 +54,7 @@ const patchSchema = z
     vfx: z.boolean(),
     estShootMinutes: z.number().int().min(0).max(100_000).nullable(),
     status: z.enum(SHOT_STATUSES),
+    imageId: id.nullable(),
   })
   .partial()
   .strict();
@@ -121,4 +124,25 @@ export async function markSceneReviewedAction(project: string, scene: string) {
   const parsed = z.object({ project: projectId, scene: sceneId }).safeParse({ project, scene });
   if (!parsed.success) return invalid;
   return markSceneReviewed(parsed.data.project, parsed.data.scene);
+}
+
+const imageType = z.enum(IMAGE_TYPES);
+
+export async function startImageUploadAction(project: string, contentType: ImageType) {
+  const parsed = z.object({ project: projectId, contentType: imageType }).safeParse({ project, contentType });
+  if (!parsed.success) return invalid;
+  return startImageUpload(parsed.data.project, parsed.data.contentType);
+}
+
+export async function confirmImageUploadAction(
+  project: string,
+  input: { assetId: string; contentType: ImageType; width: number; height: number },
+) {
+  const edge = z.number().int().min(1).max(VARIANT_MAX_EDGE.full);
+  const parsed = z
+    .object({ project: projectId, assetId: id, contentType: imageType, width: edge, height: edge })
+    .safeParse({ project, ...input });
+  if (!parsed.success) return invalid;
+  const { project: parsedProject, ...image } = parsed.data;
+  return confirmImageUpload(parsedProject, image);
 }

@@ -32,6 +32,7 @@ import type { ShotPatch, ShotRecord } from "@/lib/shots/types";
 import { CheckCell, LongTextCell, NumberCell, PresetCell, StatusCell, TextCell } from "./cells";
 import type { ShotColumn } from "./columns";
 import { useShotListActions } from "./context";
+import { ImageCell, pastedImage } from "./shot-image";
 
 type ShotRowProps = {
   shot: ShotRecord;
@@ -69,6 +70,12 @@ export const ShotRow = memo(function ShotRow({
       style={template}
       onDragOver={(event) => actions.dragOver(event, groupKey, shot.id)}
       onDrop={actions.drop}
+      onPaste={(event) => {
+        const file = pastedImage(event);
+        if (!file) return;
+        event.preventDefault();
+        actions.uploadImage(shot.id, file);
+      }}
       className={cn(
         "group/row relative grid scroll-mt-36 scroll-mb-4 border-b bg-(--row-bg) [--row-bg:var(--background)] hover:[--row-bg:color-mix(in_oklch,var(--muted)_60%,var(--background))] data-[status=omitted]:text-muted-foreground",
         dragging && "opacity-40",
@@ -183,6 +190,8 @@ function Cell({
       return <CheckCell value={shot.vfx} label={label} onChange={(vfx) => update({ vfx })} />;
     case "status":
       return <StatusCell value={shot.status} label={label} onChange={(status) => update({ status })} />;
+    case "image":
+      return <ImageCell shot={shot} name={name} />;
   }
 }
 
@@ -198,21 +207,30 @@ export function DropLine({ side }: { side: "before" | "after" }) {
   );
 }
 
-function ShotRowMenu({ shot, name, unlinked }: { shot: ShotRecord; name: string; unlinked: boolean }) {
+export function ShotRowMenu({
+  shot,
+  name,
+  unlinked,
+  layout = "rows",
+  className = "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 [@media(hover:none)]:opacity-100",
+}: {
+  shot: ShotRecord;
+  name: string;
+  unlinked: boolean;
+  /** Storyboard cards read left to right, so "up" and "down" become "earlier" and "later". */
+  layout?: "rows" | "cards";
+  className?: string;
+}) {
   const actions = useShotListActions();
   const isMac = useIsMac();
   // The menu traps focus while open, so a shot added from it is focused once it closes.
   const added = useRef<string | null>(null);
+  const [earlier, later] = layout === "rows" ? ["Move up", "Move down"] : ["Move earlier", "Move later"];
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={`Actions for ${name}`}
-          className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 [@media(hover:none)]:opacity-100"
-        >
+        <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${name}`} className={className}>
           <EllipsisIcon />
         </Button>
       </DropdownMenuTrigger>
@@ -239,12 +257,12 @@ function ShotRowMenu({ shot, name, unlinked }: { shot: ShotRecord; name: string;
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => actions.nudge(shot.id, -1)}>
               <ArrowUpIcon />
-              Move up
+              {earlier}
               <DropdownMenuShortcut>{shortcutLabel(["Alt", "↑"], isMac)}</DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => actions.nudge(shot.id, 1)}>
               <ArrowDownIcon />
-              Move down
+              {later}
               <DropdownMenuShortcut>{shortcutLabel(["Alt", "↓"], isMac)}</DropdownMenuShortcut>
             </DropdownMenuItem>
           </>
