@@ -42,7 +42,7 @@ export function SidebarBrand() {
   return (
     <NavLink
       href="/projects"
-      className="flex h-8 items-center gap-2 overflow-hidden rounded-lg ring-sidebar-ring outline-hidden focus-visible:ring-2"
+      className="flex h-8 min-w-8 items-center gap-2 overflow-hidden rounded-lg ring-sidebar-ring outline-hidden focus-visible:ring-2"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
         <ClapperboardIcon className="size-4" />
