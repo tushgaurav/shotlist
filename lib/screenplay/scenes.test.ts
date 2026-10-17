@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ScreenplayBlock } from "./blocks";
-import { extractScenes, parseHeading, startsLikeSceneHeading } from "./scenes";
+import { extractScenes, parseHeading, sceneCharacters, startsLikeSceneHeading } from "./scenes";
 
 describe("parseHeading", () => {
   it.each([
@@ -60,5 +60,24 @@ describe("extractScenes", () => {
     const after = extractScenes(edited);
     expect(after[0].contentHash).toBe(before[0].contentHash);
     expect(after[1].contentHash).not.toBe(before[1].contentHash);
+  });
+});
+
+describe("sceneCharacters", () => {
+  it("lists each scene's speakers once, without extensions", () => {
+    const characters = sceneCharacters([
+      block("character", "NARRATOR"),
+      block("sceneHeading", "INT. KITCHEN - NIGHT", "a"),
+      block("character", "MARY"),
+      block("dialogue", "Hi."),
+      block("character", "john (V.O.)"),
+      block("character", "MARY (CONT'D)"),
+      block("sceneHeading", "EXT. ROOF - DAY", "b"),
+      block("action", "Empty."),
+    ]);
+    expect([...characters]).toEqual([
+      ["a", ["MARY", "JOHN"]],
+      ["b", []],
+    ]);
   });
 });

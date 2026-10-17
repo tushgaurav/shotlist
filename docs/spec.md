@@ -89,9 +89,11 @@ Later, **lock scene numbers**: existing numbers freeze, a scene inserted between
 A shot's label is its scene number plus a letter: 12A, 12B, 12C.
 
 - The shot stores only the letter (`suffix`). The scene number comes from the scene, so if scenes renumber before shooting, shot labels follow automatically.
-- A new shot gets the next unused letter in its scene. Letters I and O are skipped (they read as 1 and 0 on a slate).
-- Reordering shots does **not** relabel them, because people refer to shot numbers in notes and on slates. An explicit "Renumber shots in this scene" action exists.
-- Standalone shots use a free-text label (e.g. "BR1").
+- A new shot gets the letter after the highest one in its scene, so it never takes the label of a shot before it. Letters I and O are skipped (they read as 1 and 0 on a slate). After Z comes AA.
+- Moving a shot to another scene gives it the next letter there.
+- Reordering shots does **not** relabel them, because people refer to shot numbers in notes and on slates. An explicit "Renumber shots in this scene" action exists. It previews the label changes before applying them.
+- Any shot can have a custom label, which replaces the automatic one. Standalone shots have only a custom label (e.g. "BR1").
+- Labels are assigned on the server under a lock on the project row, so two quick adds can't get the same letter.
 
 ### 3.6 Time estimates
 
@@ -161,9 +163,10 @@ scenes                              -- synced from the draft on every save
   updated_at          timestamptz
 
 shots
-  id                  text pk
+  id                  text pk     -- generated in the browser, so creates can be retried safely
   project_id          text → projects.id
-  scene_id            text null   -- with the project's script, → scenes (script_id, id); null = standalone shot
+  script_id           text → scripts.id  -- always the project's script; lets scene_id
+  scene_id            text null          -- reference scenes (script_id, id); null = standalone shot
   position            text        -- order within its scene (story order)
   suffix              text null   -- "A" → label "12A"
   custom_label        text null   -- standalone shots, or manual override
@@ -174,15 +177,19 @@ shots
   movement            text null   -- static, pan, tilt, dolly, truck, crane, handheld, gimbal, drone, zoom
   lens                text null   -- e.g. 35mm
   camera              text null   -- A, B
+  frame_rate          text null   -- e.g. 24, 60 (slow motion)
   subjects            text null   -- who or what is in frame
   equipment           text null
   sound               text null   -- sync, MOS, notes
+  location_note       text null   -- set or spot within the scene's location
+  vfx                 boolean     -- default false
   est_shoot_minutes   integer null
   status              text        -- planned | shot | omitted
   notes               text null
-  image_id            text → assets.id, null
-  setup_id            text → setups.id, null   -- null = not scheduled
+  image_id            text → assets.id, null       -- pass 2
+  setup_id            text → setups.id, null       -- milestone 5; null = not scheduled
   setup_position      text null   -- order within its setup (shooting order)
+  deleted_at          timestamptz null  -- soft delete, so Undo can bring a shot back
   created_at          timestamptz
   updated_at          timestamptz
 
@@ -216,7 +223,7 @@ assets
   created_at          timestamptz
 ```
 
-A scene shows a **"scene changed"** badge in the shot list when `content_hash ≠ shots_reviewed_hash`. Editing that scene's shots, or clicking "Mark reviewed", updates `shots_reviewed_hash`.
+A scene shows a **"scene changed"** badge in the shot list when it has shots and `content_hash ≠ shots_reviewed_hash`. Adding, editing or moving that scene's shots, or clicking "Mark reviewed", sets `shots_reviewed_hash` to the current `content_hash`.
 
 ## 5. Script editor
 
@@ -268,13 +275,28 @@ Courier is monospaced, so pagination is deterministic line counting: standard el
 
 ## 7. Shot list
 
+Built in two passes. Pass 1 is the table; pass 2 adds images (Amazon S3), the storyboard view, the script side panel and shot counts in the script's scene sidebar.
+
 ### Table view (default)
 
-- Grouped by scene in story order. Each group header shows scene number, heading, shot count and the "scene changed" badge.
-- Spreadsheet-style: inline editing, arrow-key navigation, Enter on the last row adds a shot.
-- Drag to reorder within a scene or move a shot to another scene.
-- Show/hide columns; column choice remembered per project.
-- Standalone shots in a group at the end. Unlinked shots (scene removed) in a group at the top with a warning.
+- Grouped by scene in story order. Each group header shows scene number, heading, shot count, estimated minutes and the "scene changed" badge with a "Mark reviewed" button. A scene menu has Add shot and Renumber shots.
+- Standalone shots in a group at the end. Unlinked shots (scene removed) in a group at the top with a warning; the menu's "Move to" puts them back in a scene.
+- The label column and the column header stay visible while scrolling. Omitted shots are dimmed and left out of time totals.
+- Show/hide columns; the choice is remembered per project in `localStorage`. Shown by default: description, size, type, movement, lens, subjects, minutes, status. Hidden by default: angle, camera, frame rate, equipment, sound, location note, VFX, notes.
+- Toolbar: total shots and estimated time, how many scenes changed, save status, columns, CSV export, keyboard shortcuts.
+
+**Editing**
+
+- Spreadsheet-style inline editing. Preset columns (size, type, angle, movement, lens, camera, frame rate, equipment, sound) suggest values as you type but accept anything. Subjects suggests the scene's characters, comma-separated.
+- **Enter** moves to the same column in the next row; on the last row of a group it adds a shot. **Shift+Enter** adds a line in long text. **↑/↓** move between rows (in long text, only from the first or last line). **←/→** move between cells at the edge of the text. **Alt+↑/↓** moves the shot up or down. **Ctrl+Space** opens suggestions. **Esc** leaves the cell.
+- Row menu: insert shot below, duplicate (copies everything except label and status), move up/down, move to another scene or standalone, delete with Undo.
+- Drag rows by the handle to reorder within a scene or move a shot to another scene.
+
+**Saving**
+
+- Changes show immediately. Edits are batched and saved about 0.7 s after typing stops; adds, moves and deletes are sent in order through one queue.
+- Failed saves are retried after 1 s and 3 s, then every 10 s with the status "Offline — retrying". Server rejections show "Some changes weren't saved" and a toast. Leaving the page with unsaved changes asks first.
+- The page stays mounted when you switch tabs in the project, so it takes fresh scenes from the server each time you come back (e.g. after editing the script).
 
 ### Storyboard view
 
@@ -282,7 +304,9 @@ Cards in the same order: image, label, size and movement, description. Images ca
 
 ### Export
 
-CSV, and PDF in table or storyboard layout — whole project, per scene, or per shoot day.
+CSV (built): one row per shot with scene number and heading, generated in the browser. Cells that start with `=`, `+`, `-` or `@` are prefixed with `'` so spreadsheets don't run them as formulas.
+
+PDF in table or storyboard layout — whole project, per scene, or per shoot day (milestone 5).
 
 ## 8. Shoot-day planning
 
@@ -314,6 +338,7 @@ lib/
   dal/           server-only data access; every function checks session and ownership
   screenplay/    TipTap nodes, keyboard flow, sceneId plugin, scene extraction,
                  Fountain import/export — shared by browser and server
+  shots/         shot types, label numbering, presets, grouping, CSV, the client shot store
   diff/          scene-level and word-level comparison
 proxy.ts         optimistic redirect to sign-in only (Next 16's name for middleware)
 ```
@@ -331,20 +356,22 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | ORM / migrations | Drizzle, drizzle-kit |
 | Auth | Better Auth, email and password |
 | Editor | TipTap |
-| Shot table | TanStack Table, dnd-kit, fractional-indexing |
+| Shot table | Hand-rolled CSS grid, native HTML drag and drop, fractional-indexing |
 | Fountain import | fountain-js |
 | Diffs | diff (jsdiff) |
-| Images | Cloudflare R2 (S3-compatible) |
+| Images | Amazon S3 |
 | PDF | @react-pdf/renderer |
 | Validation | zod |
-| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering |
+| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store |
 
 ## 11. Milestones
 
 1. **Foundation** — database, auth, projects (create, rename, archive), app shell.
 2. **Script editor** — element nodes, keyboard flow, autocomplete, page layout, autosave with revision check, sceneId plugin, scene extraction, scene sidebar, title page, Fountain export.
 3. **Versions** — save version, history, read-only view, compare (scene and word level), restore with safety snapshot, Fountain import.
-4. **Shot list** — table view, inline editing, reordering, numbering, images, storyboard view, unlinked shots, "scene changed" badges, script side panel, CSV export.
+4. **Shot list**
+   - Pass 1 (done): table view, inline editing, reordering, numbering, unlinked shots, "scene changed" badges, CSV export.
+   - Pass 2: images on S3, storyboard view, script side panel, shot counts in the scene sidebar.
 5. **Planning** — shoot days, setups, drag-to-schedule, time totals, PDF export, on-set view.
 6. **Polish** — pagination and eighths, screenplay PDF export, lock scene numbers, revision colors.
 
@@ -362,7 +389,7 @@ Write a real short script in the editor after milestone 2, before building on to
 ## 13. Open questions (defaults in bold)
 
 1. ~~Database hosting~~ — decided: AWS RDS.
-2. Image storage: **Cloudflare R2**, Vercel Blob, or UploadThing?
+2. ~~Image storage~~ — decided: Amazon S3.
 3. Sign-in: **email and password**, magic link, or Google?
 4. Deployment: **Vercel**, or somewhere else?
 5. One script per project — OK? (A series would be one project per episode.)

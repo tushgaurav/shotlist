@@ -2,20 +2,9 @@
 
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
-import { cn } from "cn";
-import {
-  BoldIcon,
-  CheckIcon,
-  CloudOffIcon,
-  DownloadIcon,
-  ItalicIcon,
-  KeyboardIcon,
-  LoaderIcon,
-  TriangleAlertIcon,
-  UnderlineIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { BoldIcon, DownloadIcon, ItalicIcon, KeyboardIcon, UnderlineIcon } from "lucide-react";
 
+import { SaveStatusIndicator, type SaveTone } from "@/components/save-status";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -114,7 +103,7 @@ export function ScriptToolbar({ editor, status, onExport, ...titlePageProps }: P
         ))}
 
         <div className="ml-auto flex items-center gap-1">
-          <SaveStatusIndicator status={status} />
+          <SaveStatusIndicator status={status} tone={STATUS_TONES[status]} label={STATUS_LABELS[status]} />
           <Separator orientation="vertical" className="mx-1.5 h-5!" />
           <TitlePageDialog {...titlePageProps} />
           <Button variant="ghost" size="sm" disabled={!editor} onClick={onExport}>
@@ -132,25 +121,18 @@ export function ScriptToolbar({ editor, status, onExport, ...titlePageProps }: P
   );
 }
 
-const STATUS_DISPLAY: Record<SaveStatus, { label: string; icon: LucideIcon; className?: string }> = {
-  saved: { label: "Saved", icon: CheckIcon },
-  saving: { label: "Saving…", icon: LoaderIcon },
-  offline: { label: "Offline — changes kept on this device", icon: CloudOffIcon, className: "text-amber-700" },
-  error: { label: "Couldn't save — changes kept on this device", icon: TriangleAlertIcon, className: "text-destructive" },
-  conflict: { label: "Not saved — changed elsewhere", icon: TriangleAlertIcon, className: "text-destructive" },
+const STATUS_TONES: Record<SaveStatus, SaveTone> = {
+  saved: "saved",
+  saving: "saving",
+  offline: "warning",
+  error: "error",
+  conflict: "error",
 };
 
-function SaveStatusIndicator({ status }: { status: SaveStatus }) {
-  const { label, icon: Icon, className } = STATUS_DISPLAY[status];
-  return (
-    <p
-      role="status"
-      aria-live="polite"
-      data-status={status}
-      className={cn("flex items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground", className)}
-    >
-      <Icon className={cn("size-3.5", status === "saving" && "animate-spin")} aria-hidden />
-      <span className={cn((status === "offline" || status === "error") && "max-sm:sr-only")}>{label}</span>
-    </p>
-  );
-}
+const STATUS_LABELS: Record<SaveStatus, string> = {
+  saved: "Saved",
+  saving: "Saving…",
+  offline: "Offline — changes kept on this device",
+  error: "Couldn't save — changes kept on this device",
+  conflict: "Not saved — changed elsewhere",
+};

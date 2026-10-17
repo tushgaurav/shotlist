@@ -15,6 +15,13 @@
       "when": 1792250214840,
       "tag": "0001_scripts_and_scenes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792252812222,
+      "tag": "0002_shots",
+      "breakpoints": true
     }
   ]
 }

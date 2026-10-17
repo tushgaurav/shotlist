@@ -84,6 +84,34 @@ export function extractScenes(blocks: ScreenplayBlock[]): ExtractedScene[] {
   return scenes;
 }
 
+/** "MARY (V.O.)" → "MARY". Also drops Fountain's dual-dialogue caret. */
+export function cueName(text: string) {
+  return text
+    .replace(/\^\s*$/, "")
+    .replace(/\s*\(.*$/, "")
+    .trim()
+    .toUpperCase();
+}
+
+/** Character names per scene ID, in order of first appearance. */
+export function sceneCharacters(blocks: ScreenplayBlock[]): Map<string, string[]> {
+  const characters = new Map<string, string[]>();
+  let names: string[] | null = null;
+  for (const block of blocks) {
+    if (block.type === "sceneHeading") {
+      names = null;
+      if (block.sceneId) {
+        names = [];
+        characters.set(block.sceneId, names);
+      }
+    } else if (block.type === "character" && names) {
+      const name = cueName(block.text);
+      if (name && !names.includes(name)) names.push(name);
+    }
+  }
+  return characters;
+}
+
 /** cyrb53: a fast, well-distributed 53-bit string hash. Used only to detect changes. */
 function hash(input: string) {
   let h1 = 0xdeadbeef;

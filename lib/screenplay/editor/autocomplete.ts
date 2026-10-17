@@ -2,7 +2,7 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey, type EditorState } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
-import { parseHeading } from "../scenes";
+import { cueName, parseHeading } from "../scenes";
 
 type AutocompleteState = { dismissed: boolean };
 
@@ -95,15 +95,6 @@ function collect<T>(
     if (index !== skipIndex && node.type.name === type) values.push(map(node.textContent));
   });
   return values;
-}
-
-/** "MARY (V.O.)" → "MARY". Also drops Fountain's dual-dialogue caret. */
-export function cueName(text: string) {
-  return text
-    .replace(/\^\s*$/, "")
-    .replace(/\s*\(.*$/, "")
-    .trim()
-    .toUpperCase();
 }
 
 function rankByUse(values: (string | null)[]) {
