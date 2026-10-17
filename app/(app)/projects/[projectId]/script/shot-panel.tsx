@@ -101,7 +101,7 @@ export function ShotPanel({ editor, projectId, shots, imagesEnabled, saver, onCl
     <aside
       aria-label="Shots in this scene"
       className={cn(
-        "sticky top-24 h-[calc(100svh-7rem)] w-80 shrink-0 flex-col border-l bg-background",
+        "sticky top-24 h-[calc(100svh-6rem)] w-80 shrink-0 flex-col border-l bg-background",
         className,
       )}
     >

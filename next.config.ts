@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  // The sidebar's account menu sits in the bottom-left corner.
+  devIndicators: { position: "bottom-right" },
   async redirects() {
     return [
       { source: "/", destination: "/projects", permanent: false },

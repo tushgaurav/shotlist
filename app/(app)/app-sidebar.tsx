@@ -15,7 +15,7 @@ import { SectionNav, SidebarBrand, SidebarNav } from "./sidebar-nav";
 
 export function AppSidebar() {
   return (
-    <Sidebar variant="inset">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarBrand />
       </SidebarHeader>

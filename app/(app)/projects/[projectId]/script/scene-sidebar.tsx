@@ -73,7 +73,7 @@ export function SceneSidebar({ editor, shots }: { editor: Editor | null; shots: 
   return (
     <aside
       aria-label="Scenes"
-      className="sticky top-24 hidden h-[calc(100svh-7rem)] w-64 shrink-0 flex-col border-r bg-background @5xl:flex"
+      className="sticky top-24 hidden h-[calc(100svh-6rem)] w-64 shrink-0 flex-col border-r bg-background @5xl:flex"
     >
       <div className="flex items-baseline justify-between px-4 pt-4 pb-2">
         <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Scenes</h2>

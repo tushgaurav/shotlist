@@ -1,5 +1,6 @@
 "use client";
 
+import { ClapperboardIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -36,22 +37,23 @@ export function CloseMobileSidebarOnNavigate() {
   return null;
 }
 
+/** The mark is as wide as the collapsed sidebar, so only the wordmark gets clipped. */
 export function SidebarBrand() {
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton size="lg" asChild>
-          <NavLink href="/projects">
-            {/* The SVG is drawn in white, so it's used as a mask and painted in the theme's color. */}
-            <span
-              role="img"
-              aria-label="Shotlist"
-              className="aspect-73/17 h-5 bg-sidebar-foreground mask-[url(/shotlist.svg)] mask-contain mask-no-repeat"
-            />
-          </NavLink>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <NavLink
+      href="/projects"
+      className="flex h-8 items-center gap-2 overflow-hidden rounded-lg ring-sidebar-ring outline-hidden focus-visible:ring-2"
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+        <ClapperboardIcon className="size-4" />
+      </span>
+      {/* The SVG is drawn in white, so it's used as a mask and painted in the theme's color. */}
+      <span
+        role="img"
+        aria-label="Shotlist"
+        className="aspect-73/17 h-4.5 shrink-0 bg-sidebar-foreground mask-[url(/shotlist.svg)] mask-contain mask-no-repeat"
+      />
+    </NavLink>
   );
 }
 
@@ -88,7 +90,7 @@ export function SectionNav({ projectId, pathname }: { projectId?: string | null;
           const isActive = pathname === href || Boolean(pathname?.startsWith(`${href}/`));
           return (
             <SidebarMenuItem key={section.segment}>
-              <SidebarMenuButton asChild isActive={isActive}>
+              <SidebarMenuButton asChild isActive={isActive} tooltip={section.label}>
                 <NavLink href={href} aria-current={isActive ? "page" : undefined}>
                   {label}
                 </NavLink>
