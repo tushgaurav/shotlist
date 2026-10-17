@@ -14,7 +14,7 @@
 
 Your script lives in one app, your shot list lives in a spreadsheet, and the second someone rewrites scene 12 they stop agreeing. Shotlist pins every shot to its scene with a permanent ID. Renumber, rename, cut and paste all you want. The shots stay with their scene, and when the scene's text changes you get a **scene changed** badge so you know to check them.
 
-## 🎬 In the can
+## In the can
 
 - **Screenplay editor**: real formatting in Courier Prime, Enter/Tab keyboard flow, `INT.`/`EXT.` auto-detect, autocomplete for characters and locations.
 - **Autosave that won't eat your pages**: keeps a local copy when you're offline, refuses stale saves from other tabs, exports to Fountain.
@@ -23,11 +23,11 @@ Your script lives in one app, your shot list lives in a spreadsheet, and the sec
 - **Shots next to the script**: a side panel shows the shots for whatever scene your cursor is in, and you can add more from there.
 - **CSV export** for the AD who lives in Sheets.
 
-## 📋 On the call sheet
+## On the call sheet
 
 Script versions and diffs · shoot days and setups · PDF export · a phone-friendly on-set view. The whole plan is in [`docs/spec.md`](docs/spec.md).
 
-## 🎥 Rolling
+## Rolling
 
 You need Node 20.9+ and a Postgres database. S3 is optional and only needed for shot images.
 
@@ -43,8 +43,8 @@ Open [localhost:3000](http://localhost:3000) and create your account. Then set `
 
 `npm test` runs the Vitest suite and `npm run typecheck` runs the type checker.
 
-## 🎞️ Built with
+## Built with
 
 Next.js 16 · React 19 · TipTap · Drizzle + Postgres · Better Auth · Tailwind 4 + shadcn/ui · S3
 
-<p align="center"><sub>That's a wrap. 🎬</sub></p>
+<p align="center"><sub>That's a wrap.</sub></p>
