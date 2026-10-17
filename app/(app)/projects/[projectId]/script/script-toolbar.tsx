@@ -1,0 +1,156 @@
+"use client";
+
+import type { Editor } from "@tiptap/core";
+import { useEditorState } from "@tiptap/react";
+import { cn } from "cn";
+import {
+  BoldIcon,
+  CheckIcon,
+  CloudOffIcon,
+  DownloadIcon,
+  ItalicIcon,
+  KeyboardIcon,
+  LoaderIcon,
+  TriangleAlertIcon,
+  UnderlineIcon,
+  type LucideIcon,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { shortcutLabel, useIsMac } from "@/lib/keyboard";
+import type { SaveStatus } from "@/lib/screenplay/draft-saver";
+import { setElementType } from "@/lib/screenplay/editor/commands";
+import { ELEMENT_LABELS, isElementType, SHORTCUT_ORDER } from "@/lib/screenplay/elements";
+import type { TitlePage } from "@/lib/screenplay/types";
+
+import { ShortcutsDialog } from "./shortcuts-dialog";
+import { TitlePageDialog } from "./title-page-dialog";
+
+type Props = {
+  editor: Editor | null;
+  status: SaveStatus;
+  scriptId: string;
+  projectTitle: string;
+  titlePage: TitlePage;
+  onTitlePageSaved: (titlePage: TitlePage) => void;
+  onExport: () => void;
+};
+
+export function ScriptToolbar({ editor, status, onExport, ...titlePageProps }: Props) {
+  const isMac = useIsMac();
+  const state = useEditorState({
+    editor,
+    selector: ({ editor }) =>
+      editor && {
+        type: editor.state.selection.$from.parent.type.name,
+        bold: editor.isActive("bold"),
+        italic: editor.isActive("italic"),
+        underline: editor.isActive("underline"),
+      },
+  });
+
+  const elementType = state && isElementType(state.type) ? state.type : undefined;
+  const marks = [
+    { name: "bold", label: "Bold", icon: BoldIcon, key: "B", run: () => editor?.chain().focus().toggleBold().run() },
+    { name: "italic", label: "Italic", icon: ItalicIcon, key: "I", run: () => editor?.chain().focus().toggleItalic().run() },
+    { name: "underline", label: "Underline", icon: UnderlineIcon, key: "U", run: () => editor?.chain().focus().toggleUnderline().run() },
+  ] as const;
+
+  return (
+    <div className="border-b bg-background/95 backdrop-blur">
+      <div className="flex h-12 items-center gap-1 px-3 sm:px-4">
+        <Select
+          value={elementType ?? ""}
+          disabled={!editor}
+          onValueChange={(value) => {
+            if (editor && isElementType(value)) setElementType(value)(editor.state, editor.view.dispatch);
+          }}
+        >
+          <SelectTrigger size="sm" className="w-40" aria-label="Element type">
+            <SelectValue placeholder="Element">{elementType && ELEMENT_LABELS[elementType]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent
+            position="popper"
+            align="start"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              editor?.commands.focus();
+            }}
+          >
+            {SHORTCUT_ORDER.map((type, index) => (
+              <SelectItem key={type} value={type}>
+                {ELEMENT_LABELS[type]}
+                <Kbd className="ml-auto">{shortcutLabel(["Mod", "Alt", String(index + 1)], isMac)}</Kbd>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Separator orientation="vertical" className="mx-1.5 h-5!" />
+
+        {marks.map((mark) => (
+          <Tooltip key={mark.name}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={mark.label}
+                aria-pressed={state?.[mark.name] ?? false}
+                disabled={!editor}
+                className="aria-pressed:bg-muted"
+                onClick={mark.run}
+              >
+                <mark.icon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {mark.label} <Kbd>{shortcutLabel(["Mod", mark.key], isMac)}</Kbd>
+            </TooltipContent>
+          </Tooltip>
+        ))}
+
+        <div className="ml-auto flex items-center gap-1">
+          <SaveStatusIndicator status={status} />
+          <Separator orientation="vertical" className="mx-1.5 h-5!" />
+          <TitlePageDialog {...titlePageProps} />
+          <Button variant="ghost" size="sm" disabled={!editor} onClick={onExport}>
+            <DownloadIcon data-icon="inline-start" />
+            Export
+          </Button>
+          <ShortcutsDialog>
+            <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
+              <KeyboardIcon />
+            </Button>
+          </ShortcutsDialog>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const STATUS_DISPLAY: Record<SaveStatus, { label: string; icon: LucideIcon; className?: string }> = {
+  saved: { label: "Saved", icon: CheckIcon },
+  saving: { label: "Saving…", icon: LoaderIcon },
+  offline: { label: "Offline — changes kept on this device", icon: CloudOffIcon, className: "text-amber-700" },
+  error: { label: "Couldn't save — changes kept on this device", icon: TriangleAlertIcon, className: "text-destructive" },
+  conflict: { label: "Not saved — changed elsewhere", icon: TriangleAlertIcon, className: "text-destructive" },
+};
+
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  const { label, icon: Icon, className } = STATUS_DISPLAY[status];
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      data-status={status}
+      className={cn("flex items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground", className)}
+    >
+      <Icon className={cn("size-3.5", status === "saving" && "animate-spin")} aria-hidden />
+      <span className={cn((status === "offline" || status === "error") && "max-sm:sr-only")}>{label}</span>
+    </p>
+  );
+}

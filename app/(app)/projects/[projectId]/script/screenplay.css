@@ -1,0 +1,95 @@
+/* Standard screenplay page: US Letter, Courier 12pt, 6 lines per inch. */
+.screenplay-page {
+  --sp-line: 12pt;
+  --sp-muted: oklch(0.708 0 0);
+
+  box-sizing: border-box;
+  width: 8.5in;
+  max-width: 100%;
+  min-height: 11in;
+  margin-inline: auto;
+  padding: 1in 1in 1in 1.5in;
+  background: white;
+  color: oklch(0.205 0 0);
+  font-family: var(--font-screenplay), "Courier Prime", "Courier New", Courier, monospace;
+  font-size: 12pt;
+  line-height: var(--sp-line);
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.08),
+    0 0 0 1px rgb(0 0 0 / 0.05);
+}
+
+@media (max-width: 56rem) {
+  .screenplay-page {
+    padding: 0.75in 0.5in;
+  }
+}
+
+.screenplay-page .ProseMirror {
+  min-height: 9in;
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.screenplay-page .ProseMirror > p {
+  margin: var(--sp-line) 0 0;
+}
+
+.screenplay-page .ProseMirror > p:first-child {
+  margin-top: 0;
+}
+
+.screenplay-page .sp-sceneHeading {
+  text-transform: uppercase;
+  scroll-margin-top: 8rem;
+}
+
+.screenplay-page .ProseMirror > * + .sp-sceneHeading {
+  margin-top: calc(var(--sp-line) * 2);
+}
+
+.screenplay-page .sp-character {
+  margin-left: 2.2in;
+  text-transform: uppercase;
+}
+
+.screenplay-page .sp-parenthetical {
+  margin-left: 1.6in;
+  max-width: 2in;
+}
+
+.screenplay-page .sp-dialogue {
+  margin-left: 1in;
+  max-width: 3.5in;
+}
+
+.screenplay-page .sp-transition {
+  text-align: right;
+  text-transform: uppercase;
+}
+
+/* A character's parentheticals and dialogue sit directly under the cue. */
+.screenplay-page
+  .ProseMirror
+  > :is(.sp-character, .sp-parenthetical, .sp-dialogue)
+  + :is(.sp-parenthetical, .sp-dialogue) {
+  margin-top: 0;
+}
+
+.screenplay-page .ProseMirror > p.is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--sp-muted);
+  pointer-events: none;
+}
+
+.screenplay-page .ProseMirror > p.sp-transition.is-empty::before {
+  float: right;
+}
+
+.screenplay-page .sp-suggestion {
+  color: var(--sp-muted);
+  pointer-events: none;
+}

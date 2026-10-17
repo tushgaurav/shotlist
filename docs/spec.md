@@ -146,8 +146,8 @@ script_versions                     -- immutable once written
   created_at          timestamptz
 
 scenes                              -- synced from the draft on every save
-  id                  text pk     -- same value as sceneId in the document
-  script_id           text → scripts.id
+  script_id           text → scripts.id  -- pk is (script_id, id): IDs come from the
+  id                  text               -- browser, so they're only unique per script
   position            integer     -- order in the current draft
   number              text        -- display number, e.g. "12"
   heading             text        -- full heading line
@@ -163,7 +163,7 @@ scenes                              -- synced from the draft on every save
 shots
   id                  text pk
   project_id          text → projects.id
-  scene_id            text → scenes.id, null   -- null = standalone shot
+  scene_id            text null   -- with the project's script, → scenes (script_id, id); null = standalone shot
   position            text        -- order within its scene (story order)
   suffix              text null   -- "A" → label "12A"
   custom_label        text null   -- standalone shots, or manual override
@@ -241,9 +241,9 @@ Text is stored as typed. Headings, character names and transitions are displayed
 So a conversation is Enter, type, Enter, type…, and pressing Enter on an empty Character line drops back to Action.
 
 - **Tab / Shift+Tab** cycles the current line's type: Action → Character → Parenthetical → Dialogue → Transition → Scene heading.
-- **Cmd/Ctrl + 1–6** sets the type directly.
+- **Cmd/Ctrl + Option/Alt + 1–6** sets the type directly (heading, action, character, parenthetical, dialogue, transition). Plain Cmd/Ctrl + 1–6 switches browser tabs, so it can't be used.
 - **Auto-detect:** a line starting with `INT.`, `EXT.`, `INT./EXT.`, `I/E.` or `EST.` becomes a scene heading; typing `(` at the start of a line after Character or Dialogue makes a parenthetical; an all-caps line ending in `TO:` becomes a transition.
-- **Autocomplete:** character names from earlier in the script; locations and times of day (DAY, NIGHT, CONTINUOUS, LATER, MORNING, EVENING) in headings.
+- **Autocomplete:** character names from earlier in the script; locations and times of day (DAY, NIGHT, CONTINUOUS, LATER, MORNING, EVENING) in headings. Shown as grey text after the cursor; Tab, → or Enter accepts, Esc dismisses.
 
 ### Layout
 
@@ -254,7 +254,8 @@ Rendered as pages on screen in Courier Prime 12 pt with standard screenplay marg
 - Autosave sends the full document and `draft_revision` to a Route Handler (`PUT /api/scripts/[scriptId]/draft`). A Route Handler rather than a Server Action because Server Actions are capped at 1 MB per request by default, and a long script's JSON can approach that.
 - If `draft_revision` doesn't match (the script was saved from another tab), the save is rejected and the editor asks you to reload.
 - Unsaved changes are mirrored to `localStorage` so a crash or lost connection doesn't lose work.
-- Status indicator: "Saving…", "Saved", "Offline — changes kept on this device".
+- Status indicator: "Saving…", "Saved", "Offline — changes kept on this device", "Couldn't save — changes kept on this device".
+- On the next visit, a local copy based on the current revision is restored automatically. A local copy based on an older revision isn't merged; it's offered as a Fountain download.
 
 ### Pagination (later)
 

@@ -8,12 +8,22 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "auth:generate": "npx auth@latest generate --config lib/auth.ts --output lib/db/schema/auth.ts"
   },
   "dependencies": {
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/extension-bold": "^3.32.0",
+    "@tiptap/extension-document": "^3.32.0",
+    "@tiptap/extension-italic": "^3.32.0",
+    "@tiptap/extension-text": "^3.32.0",
+    "@tiptap/extension-underline": "^3.32.0",
+    "@tiptap/extensions": "^3.32.0",
+    "@tiptap/pm": "^3.32.0",
+    "@tiptap/react": "^3.32.0",
     "better-auth": "^1.7.10",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
@@ -42,6 +52,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.12"
   }
 }
