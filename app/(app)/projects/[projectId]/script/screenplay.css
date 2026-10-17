@@ -1,7 +1,12 @@
 /* Standard screenplay page: US Letter, Courier 12pt, 6 lines per inch. */
 .screenplay-page {
   --sp-line: 12pt;
+  --sp-paper: white;
+  --sp-ink: oklch(0.205 0 0);
   --sp-muted: oklch(0.708 0 0);
+  --sp-edge:
+    0 1px 3px rgb(0 0 0 / 0.08),
+    0 0 0 1px rgb(0 0 0 / 0.05);
 
   box-sizing: border-box;
   width: 8.5in;
@@ -9,17 +14,22 @@
   min-height: 11in;
   margin-inline: auto;
   padding: 1in 1in 1in 1.5in;
-  background: white;
-  color: oklch(0.205 0 0);
+  background: var(--sp-paper);
+  color: var(--sp-ink);
   font-family: var(--font-screenplay), "Courier Prime", "Courier New", Courier, monospace;
   font-size: 12pt;
   line-height: var(--sp-line);
-  box-shadow:
-    0 1px 3px rgb(0 0 0 / 0.08),
-    0 0 0 1px rgb(0 0 0 / 0.05);
+  box-shadow: var(--sp-edge);
 }
 
-@media (max-width: 56rem) {
+.dark .screenplay-page {
+  --sp-paper: var(--card);
+  --sp-ink: var(--foreground);
+  --sp-muted: var(--muted-foreground);
+  --sp-edge: 0 0 0 1px var(--border);
+}
+
+@container (max-width: 56rem) {
   .screenplay-page {
     padding: 0.75in 0.5in;
   }

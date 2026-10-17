@@ -138,7 +138,7 @@ export function ScriptToolbar({
                 size="icon-sm"
                 aria-label="Shots for this scene"
                 aria-pressed={shotPanelOpen}
-                className="hidden aria-pressed:bg-muted xl:inline-flex"
+                className="hidden aria-pressed:bg-muted @7xl:inline-flex"
                 onClick={onToggleShotPanel}
               >
                 <PanelRightIcon />

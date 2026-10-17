@@ -27,15 +27,24 @@ import { PROJECT_KIND_LABELS, PROJECT_KINDS, PROJECT_TITLE_MAX_LENGTH } from "@/
 
 import { createProjectAction } from "./actions";
 
-export function NewProjectDialog() {
+/** Brings its own button, unless `open` is passed to control it from elsewhere. */
+export function NewProjectDialog({
+  open,
+  onOpenChange,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusIcon data-icon="inline-start" />
-          New project
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {open === undefined && (
+        <DialogTrigger asChild>
+          <Button>
+            <PlusIcon data-icon="inline-start" />
+            New project
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <NewProjectForm />
       </DialogContent>

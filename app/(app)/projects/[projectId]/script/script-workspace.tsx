@@ -15,7 +15,7 @@ import { toFountain } from "@/lib/screenplay/fountain";
 import type { ScreenplayDocJSON, TitlePage } from "@/lib/screenplay/types";
 import type { ShotListData } from "@/lib/shots/types";
 import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { useMinWidth } from "@/lib/use-min-width";
 
 import { useProjectShots } from "../shots/project-shots";
 import { SceneSidebar } from "./scene-sidebar";
@@ -41,7 +41,8 @@ export type ScriptWorkspaceProps = {
 
 export function ScriptWorkspace({ script, projectId, projectTitle, shots, imagesEnabled }: ScriptWorkspaceProps) {
   const projectShots = useProjectShots(projectId, shots);
-  const shotPanel = useShotPanelPreference();
+  const [workspace, setWorkspace] = useState<HTMLDivElement | null>(null);
+  const shotPanel = useShotPanelPreference(workspace);
   const [status, setStatus] = useState<SaveStatus>("saved");
   const [titlePage, setTitlePage] = useState(script.titlePage);
   const [saver] = useState(
@@ -126,8 +127,8 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
   const editorKey = editor ? "ready" : "loading";
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="sticky top-14 z-30">
+    <div ref={setWorkspace} className="flex flex-1 flex-col">
+      <div className="sticky top-12 z-30">
         <ScriptToolbar
           key={editorKey}
           editor={editor}
@@ -165,17 +166,19 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
 }
 
 /**
- * The shots panel only fits beside the page on wide screens. Until it's toggled it opens
- * on the widest ones; the CSS decides that, so the server renders it right.
+ * The shots panel only fits beside the page when there's room, which depends on the
+ * app sidebar as well as the screen. Until it's toggled it opens in the widest
+ * workspaces; container queries decide that, so the server renders it right.
  */
-function useShotPanelPreference() {
+function useShotPanelPreference(workspace: HTMLElement | null) {
   const preference = useLocalStorage(SHOT_PANEL_KEY);
-  const widest = useMediaQuery("(min-width: 96rem)");
+  const widest = useMinWidth(workspace, 96);
   const open = preference === "open" || (preference === null && widest);
   return {
     open,
     toggle: () => writeLocalStorage(SHOT_PANEL_KEY, open ? "closed" : "open"),
-    className: preference === "closed" ? "hidden" : preference === "open" ? "hidden xl:flex" : "hidden 2xl:flex",
+    className:
+      preference === "closed" ? "hidden" : preference === "open" ? "hidden @7xl:flex" : "hidden @min-[96rem]:flex",
   };
 }
 
@@ -191,7 +194,7 @@ function ConflictBanner() {
   return (
     <div
       role="alert"
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-950 sm:px-6"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-950 sm:px-6 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100"
     >
       <TriangleAlertIcon className="size-4 shrink-0" />
       <p className="flex-1">

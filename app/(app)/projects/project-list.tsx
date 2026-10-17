@@ -68,7 +68,7 @@ function ProjectCard({ project }: { project: ProjectSummary }) {
       className="relative flex min-h-32 flex-col gap-4 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50 data-[archived=true]:bg-muted/40"
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="leading-snug font-medium text-pretty">
+        <h3 className="text-base leading-snug font-medium text-pretty">
           <Link
             href={`/projects/${project.id}/script`}
             className="outline-none after:absolute after:inset-0 after:rounded-xl"

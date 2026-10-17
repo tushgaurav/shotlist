@@ -27,14 +27,14 @@ const summaryColumns = {
   archivedAt: projects.archivedAt,
 };
 
-export async function listProjects(): Promise<ProjectSummary[]> {
+export const listProjects = cache(async (): Promise<ProjectSummary[]> => {
   const user = await requireUser();
   return db
     .select(summaryColumns)
     .from(projects)
     .where(eq(projects.ownerId, user.id))
     .orderBy(desc(projects.updatedAt));
-}
+});
 
 export const getProject = cache(async (projectId: string): Promise<ProjectSummary> => {
   const user = await requireUser();

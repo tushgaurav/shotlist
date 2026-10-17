@@ -51,7 +51,7 @@ export function ShotListToolbar({
   onExport,
 }: Props) {
   return (
-    <div className="sticky top-14 z-30 border-b bg-background/95 backdrop-blur">
+    <div className="sticky top-12 z-30 border-b bg-background/95 backdrop-blur">
       <div className="flex h-12 items-center gap-3 px-3 sm:px-4">
         <div role="group" aria-label="View" className="flex shrink-0 rounded-lg border p-0.5">
           {(

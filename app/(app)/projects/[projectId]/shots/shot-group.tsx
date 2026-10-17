@@ -117,7 +117,7 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
     <div role={inGrid ? "row" : undefined} style={{ minWidth }} className="border-b bg-muted/50">
       <div
         role={inGrid ? "gridcell" : undefined}
-        className="sticky left-0 flex w-fit max-w-[calc(100vw-1rem)] items-center gap-3 py-2 pr-3 pl-3"
+        className="sticky left-0 flex w-fit max-w-[calc(100cqw-1rem)] items-center gap-3 py-2 pr-3 pl-3"
       >
         {group.kind === "scene" ? (
           <>

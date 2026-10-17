@@ -262,7 +262,7 @@ export function ShotList({ projectId, projectTitle, data, imagesEnabled }: Props
           <div
             role="rowgroup"
             ref={headerRef}
-            className="sticky top-26 z-20 overflow-hidden border-b bg-muted text-xs font-medium text-muted-foreground"
+            className="sticky top-24 z-20 overflow-hidden border-b bg-muted text-xs font-medium text-muted-foreground"
           >
             <div role="row" className="grid" style={template}>
               <div role="columnheader" className="sticky left-0 z-1 bg-muted">

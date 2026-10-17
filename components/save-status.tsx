@@ -6,7 +6,7 @@ export type SaveTone = "saved" | "saving" | "warning" | "error";
 const TONES: Record<SaveTone, { icon: LucideIcon; className?: string }> = {
   saved: { icon: CheckIcon },
   saving: { icon: LoaderIcon, className: "[&>svg]:animate-spin" },
-  warning: { icon: CloudOffIcon, className: "text-amber-700" },
+  warning: { icon: CloudOffIcon, className: "text-amber-700 dark:text-amber-400" },
   error: { icon: TriangleAlertIcon, className: "text-destructive" },
 };
 
