@@ -1,11 +1,10 @@
 "use client";
 
-import { CheckIcon, ChevronsUpDownIcon, FolderOpenIcon, LayoutGridIcon, PlusIcon } from "lucide-react";
+import { CheckIcon, ChevronsUpDownIcon, LayoutGridIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { TypeIcon } from "@/components/project-type-icon";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,12 +18,10 @@ import { Kbd } from "@/components/ui/kbd";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { shortcutLabel, useIsMac } from "@/lib/keyboard";
-import type { ProjectTypeIcon } from "@/lib/projects";
-
 import { PROJECT_SECTIONS } from "./projects/[projectId]/sections";
 import { NewProjectDialog, type NewProjectOptions } from "./projects/new-project-dialog";
 
-export type SwitcherProject = { id: string; title: string; icon: ProjectTypeIcon | null; archived: boolean };
+export type SwitcherProject = { id: string; title: string; archived: boolean };
 
 export function SidebarToggle() {
   const isMac = useIsMac();
@@ -70,11 +67,6 @@ export function ProjectSwitcher({
             className="max-w-48 sm:max-w-72"
             aria-label={current ? `Switch project, current: ${current.title}` : "Select a project"}
           >
-            {current ? (
-              <TypeIcon icon={current.icon} data-icon="inline-start" className="text-muted-foreground" />
-            ) : (
-              <FolderOpenIcon data-icon="inline-start" className="text-muted-foreground" />
-            )}
             <span className="truncate">{current?.title ?? "Select project"}</span>
             <ChevronsUpDownIcon data-icon="inline-end" className="text-muted-foreground" />
           </Button>

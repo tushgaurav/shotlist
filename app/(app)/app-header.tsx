@@ -25,12 +25,7 @@ async function ProjectSwitcherLoader() {
   const [projects, newProject] = await Promise.all([listProjects(), getNewProjectOptions()]);
   return (
     <ProjectSwitcher
-      projects={projects.map(({ id, title, type, archivedAt }) => ({
-        id,
-        title,
-        icon: type?.icon ?? null,
-        archived: archivedAt !== null,
-      }))}
+      projects={projects.map(({ id, title, archivedAt }) => ({ id, title, archived: archivedAt !== null }))}
       newProject={newProject}
     />
   );
