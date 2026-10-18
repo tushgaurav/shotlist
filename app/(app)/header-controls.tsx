@@ -91,7 +91,6 @@ export function ProjectSwitcher({
                       href={`/projects/${project.id}/${section.segment}`}
                       aria-current={isCurrent ? "page" : undefined}
                     >
-                      <TypeIcon icon={project.icon} />
                       <span className="truncate">{project.title}</span>
                       {isCurrent && <CheckIcon className="ml-auto" />}
                     </Link>
