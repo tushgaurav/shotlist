@@ -70,11 +70,6 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
     },
   });
 
-  const exportFountain = (doc: ScreenplayDocJSON) => {
-    const fileName = safeFileName(projectTitle, "Script");
-    downloadText(toFountain(doc, exportTitlePage(titlePage, projectTitle)), `${fileName}.fountain`);
-  };
-
   // Bring back edits that never reached the server (crash, closed tab, lost connection).
   const restoreChecked = useRef(false);
   useEffect(() => {
@@ -137,7 +132,6 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
           projectTitle={projectTitle}
           titlePage={titlePage}
           onTitlePageSaved={setTitlePage}
-          onExport={() => editor && exportFountain(editor.getJSON() as ScreenplayDocJSON)}
           shotPanelOpen={shotPanel.open}
           onToggleShotPanel={shotPanel.toggle}
         />
@@ -179,14 +173,6 @@ function useShotPanelPreference(workspace: HTMLElement | null) {
     toggle: () => writeLocalStorage(SHOT_PANEL_KEY, open ? "closed" : "open"),
     className:
       preference === "closed" ? "hidden" : preference === "open" ? "hidden @7xl:flex" : "hidden @min-[96rem]:flex",
-  };
-}
-
-function exportTitlePage(titlePage: TitlePage, projectTitle: string): TitlePage {
-  return {
-    ...titlePage,
-    title: titlePage.title || projectTitle,
-    credit: titlePage.credit || (titlePage.author ? "Written by" : undefined),
   };
 }
 

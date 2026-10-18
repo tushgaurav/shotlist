@@ -2,14 +2,7 @@
 
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
-import {
-  BoldIcon,
-  DownloadIcon,
-  ItalicIcon,
-  KeyboardIcon,
-  PanelRightIcon,
-  UnderlineIcon,
-} from "lucide-react";
+import { BoldIcon, ItalicIcon, KeyboardIcon, PanelRightIcon, UnderlineIcon } from "lucide-react";
 
 import { SaveStatusIndicator, type SaveTone } from "@/components/save-status";
 import { Button } from "@/components/ui/button";
@@ -23,6 +16,7 @@ import { setElementType } from "@/lib/screenplay/editor/commands";
 import { ELEMENT_LABELS, isElementType, SHORTCUT_ORDER } from "@/lib/screenplay/elements";
 import type { TitlePage } from "@/lib/screenplay/types";
 
+import { ExportMenu } from "./export-menu";
 import { ShortcutsDialog } from "./shortcuts-dialog";
 import { TitlePageDialog } from "./title-page-dialog";
 
@@ -33,19 +27,11 @@ type Props = {
   projectTitle: string;
   titlePage: TitlePage;
   onTitlePageSaved: (titlePage: TitlePage) => void;
-  onExport: () => void;
   shotPanelOpen: boolean;
   onToggleShotPanel: () => void;
 };
 
-export function ScriptToolbar({
-  editor,
-  status,
-  onExport,
-  shotPanelOpen,
-  onToggleShotPanel,
-  ...titlePageProps
-}: Props) {
+export function ScriptToolbar({ editor, status, shotPanelOpen, onToggleShotPanel, ...titlePageProps }: Props) {
   const isMac = useIsMac();
   const state = useEditorState({
     editor,
@@ -122,10 +108,7 @@ export function ScriptToolbar({
           <SaveStatusIndicator status={status} tone={STATUS_TONES[status]} label={STATUS_LABELS[status]} />
           <Separator orientation="vertical" className="mx-1.5 h-5!" />
           <TitlePageDialog {...titlePageProps} />
-          <Button variant="ghost" size="sm" disabled={!editor} onClick={onExport}>
-            <DownloadIcon data-icon="inline-start" />
-            Export
-          </Button>
+          <ExportMenu editor={editor} projectTitle={titlePageProps.projectTitle} titlePage={titlePageProps.titlePage} />
           <ShortcutsDialog>
             <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
               <KeyboardIcon />
