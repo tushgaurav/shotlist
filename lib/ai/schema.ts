@@ -43,6 +43,9 @@ export type OutlineScene = z.infer<typeof outlineSceneSchema>;
 
 export const aiModelIdSchema = z.enum(AI_MODEL_IDS);
 
+/** Whether the AI reads the project's details. Without them it writes from the script alone. */
+const projectDetailsSchema = z.boolean().default(true);
+
 const pointSchema = z.object({
   block: z.number().int().nonnegative(),
   offset: z.number().int().nonnegative(),
@@ -74,6 +77,7 @@ export type WriteMode = (typeof WRITE_MODES)[number];
 
 export const writeRequestSchema = z.object({
   model: aiModelIdSchema,
+  projectDetails: projectDetailsSchema,
   mode: z.enum(WRITE_MODES),
   instruction: z.string().max(4000),
   script: scriptSnapshotSchema,
@@ -86,12 +90,14 @@ export type WriteRequest = z.infer<typeof writeRequestSchema>;
 
 export const outlineRequestSchema = z.object({
   model: aiModelIdSchema,
+  projectDetails: projectDetailsSchema,
   direction: z.string().max(4000),
 });
 
 export type OutlineRequest = z.infer<typeof outlineRequestSchema>;
 
 export const completeRequestSchema = z.object({
+  projectDetails: projectDetailsSchema,
   script: scriptSnapshotSchema,
 });
 
@@ -103,6 +109,7 @@ export type CompleteResponse = z.infer<typeof completeResponseSchema>;
 
 export const chatRequestSchema = z.object({
   model: aiModelIdSchema,
+  projectDetails: projectDetailsSchema,
   script: scriptSnapshotSchema,
   messages: z.array(z.unknown()).max(400),
 });

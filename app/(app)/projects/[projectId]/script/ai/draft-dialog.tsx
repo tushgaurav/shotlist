@@ -22,7 +22,7 @@ import { outlineOutputSchema, type OutlineScene } from "@/lib/ai/schema";
 
 import { DetailsChip } from "./details-chip";
 import { ModelSelect } from "./model-select";
-import { useAiModel } from "./use-ai-model";
+import { useAiModel, useProjectDetails } from "./use-ai-model";
 import type { AiWriter } from "./use-ai-writer";
 
 type Scene = OutlineScene & { key: string };
@@ -77,6 +77,7 @@ function DraftFlow({
   onClose,
 }: Omit<Props, "open" | "onOpenChange"> & { onClose: () => void }) {
   const [model] = useAiModel();
+  const [projectDetails] = useProjectDetails();
   const [step, setStep] = useState<"brief" | "plan">("brief");
   const [direction, setDirection] = useState("");
   const [scenes, setScenes] = useState<Scene[] | null>(null);
@@ -109,7 +110,7 @@ function DraftFlow({
     setStep("plan");
     setScenes(null);
     setFailed(null);
-    outline.submit({ model, direction });
+    outline.submit({ model, projectDetails, direction });
   };
 
   const update = (key: string, patch: Partial<OutlineScene>) =>
@@ -186,7 +187,7 @@ function DraftFlow({
         <DialogFooter className="items-center sm:justify-between">
           <div className="flex items-center gap-1">
             <ModelSelect />
-            <DetailsChip projectId={projectId} details={details} />
+            <DetailsChip details={details} />
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>

@@ -275,7 +275,6 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
             session={composer}
             onClose={() => setComposer(null)}
             onDraft={() => setDraftOpen(true)}
-            projectId={projectId}
             details={ai.details}
           />
           <DraftDialog

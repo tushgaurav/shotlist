@@ -11,7 +11,7 @@ import {
 import type { NextRequest } from "next/server";
 
 import type { AssistantMessage, ProposeEditOutput } from "@/lib/ai/chat";
-import { scriptContext } from "@/lib/ai/context";
+import { scriptContext, withoutDetails } from "@/lib/ai/context";
 import { chatInstructions } from "@/lib/ai/prompts";
 import { languageModel } from "@/lib/ai/provider";
 import { describeAiError, prepareAiRequest, textError } from "@/lib/ai/route";
@@ -26,7 +26,8 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/project
   const { projectId } = await ctx.params;
   const prepared = await prepareAiRequest(request, projectId, chatRequestSchema);
   if (!prepared.ok) return prepared.response;
-  const { project, body } = prepared;
+  const { body } = prepared;
+  const project = body.projectDetails ? prepared.project : withoutDetails(prepared.project);
 
   const script = scriptContext(body.script);
   const tools = {

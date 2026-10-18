@@ -137,7 +137,6 @@ type Props = {
   session: ComposerSession | null;
   onClose: () => void;
   onDraft: () => void;
-  projectId: string;
   details: string[];
 };
 
@@ -150,7 +149,7 @@ export function Composer({ session, onClose, ...props }: Props) {
   );
 }
 
-function ComposerBody({ editor, writer, session, onClose, onDraft, projectId, details }: Props & { session: ComposerSession }) {
+function ComposerBody({ editor, writer, session, onClose, onDraft, details }: Props & { session: ComposerSession }) {
   const listId = useId();
   const [text, setText] = useState("");
   const [active, setActive] = useState<number | null>(null);
@@ -275,7 +274,7 @@ function ComposerBody({ editor, writer, session, onClose, onDraft, projectId, de
 
         <div className="flex items-center gap-1 border-t bg-muted/40 px-1.5 py-1">
           <ModelSelect />
-          <DetailsChip projectId={projectId} details={details} />
+          <DetailsChip details={details} />
           <span className="ml-auto flex shrink-0 items-center gap-1 pr-1.5 text-xs text-muted-foreground">
             <Kbd>↵</Kbd>
             {context.kind === "rewrite" ? "Rewrite" : "Write"}

@@ -1,6 +1,7 @@
 import { Output, streamText } from "ai";
 import type { NextRequest } from "next/server";
 
+import { withoutDetails } from "@/lib/ai/context";
 import { outlinePrompt } from "@/lib/ai/prompts";
 import { languageModel } from "@/lib/ai/provider";
 import { prepareAiRequest, textStreamResponse } from "@/lib/ai/route";
@@ -13,7 +14,8 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/project
   const { projectId } = await ctx.params;
   const prepared = await prepareAiRequest(request, projectId, outlineRequestSchema);
   if (!prepared.ok) return prepared.response;
-  const { project, body } = prepared;
+  const { body } = prepared;
+  const project = body.projectDetails ? prepared.project : withoutDetails(prepared.project);
 
   const { instructions, prompt } = outlinePrompt(project, body.direction);
   const result = streamText({

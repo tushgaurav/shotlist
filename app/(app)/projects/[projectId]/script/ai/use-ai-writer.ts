@@ -36,6 +36,8 @@ import {
   updateAiSuggestion,
 } from "@/lib/screenplay/editor/ai-suggestion";
 
+import { useProjectDetails } from "./use-ai-model";
+
 export type WriteKind = "continue" | "nextScene" | "rewrite";
 
 export type AiWriter = {
@@ -54,7 +56,7 @@ export type AiWriter = {
   discard(): void;
 };
 
-type Request = Omit<WriteRequest, "model">;
+type Request = Omit<WriteRequest, "model" | "projectDetails">;
 
 function friendlyError(error: Error) {
   if (error.message === "Failed to fetch" || error.name === "TypeError") {
@@ -64,6 +66,7 @@ function friendlyError(error: Error) {
 }
 
 export function useAiWriter(editor: Editor | null, projectId: string, model: AiModelId): AiWriter {
+  const [projectDetails] = useProjectDetails();
   const [busy, setBusy] = useState(false);
   const [label, setLabel] = useState("Writing…");
 
@@ -103,7 +106,7 @@ export function useAiWriter(editor: Editor | null, projectId: string, model: AiM
       latest.current = undefined;
       streaming.current = true;
       // submit is typed void but resolves once the stream has ended.
-      await (submit({ ...body, model }) as unknown as Promise<void>);
+      await (submit({ ...body, model, projectDetails }) as unknown as Promise<void>);
       streaming.current = false;
 
       const final = cleanElements(finished.current ?? latest.current, { final: true });
@@ -111,7 +114,7 @@ export function useAiWriter(editor: Editor | null, projectId: string, model: AiM
       const tr = updateAiSuggestion(editor.state, base.current);
       if (tr) editor.view.dispatch(tr);
     },
-    [editor, submit, model],
+    [editor, submit, model, projectDetails],
   );
 
   const settle = useCallback(() => {

@@ -1,37 +1,35 @@
 "use client";
 
-import { FileTextIcon, PlusIcon } from "lucide-react";
-import Link from "next/link";
+import { cn } from "cn";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-/** Shows which project details the AI writes from, or invites the writer to add some. */
-export function DetailsChip({ projectId, details }: { projectId: string; details: string[] }) {
-  const href = `/projects/${projectId}/details`;
-  if (details.length === 0) {
-    return (
-      <Link
-        href={href}
-        className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <PlusIcon className="size-3" />
-        Add project details for better results
-      </Link>
-    );
-  }
+import { useProjectDetails } from "./use-ai-model";
+
+/** Turns the project's details on or off for the AI. Hidden when the project has none. */
+export function DetailsChip({ details }: { details: string[] }) {
+  const [enabled, setEnabled] = useProjectDetails();
+  if (details.length === 0) return null;
+
+  const list = joinList(details.map((detail) => detail.toLowerCase()));
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Link
-          href={href}
-          className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        <label
+          className={cn(
+            "inline-flex h-6 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-xs transition-colors select-none hover:bg-muted hover:text-foreground",
+            enabled ? "text-foreground" : "text-muted-foreground",
+          )}
         >
-          <FileTextIcon className="size-3" />
-          Uses project details
-        </Link>
+          <Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(checked === true)} className="size-3.5" />
+          Use project details
+        </label>
       </TooltipTrigger>
       <TooltipContent className="block max-w-56">
-        Writes from the script and your project&rsquo;s {joinList(details.map((detail) => detail.toLowerCase()))}.
+        {enabled
+          ? `The AI reads the script and your project's ${list}.`
+          : `The AI reads only the script. Turn on to include your project's ${list}.`}
       </TooltipContent>
     </Tooltip>
   );

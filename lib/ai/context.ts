@@ -63,6 +63,21 @@ export function filledDetails(project: Omit<AiProject, "titlePage" | "title">) {
   return fields.filter(([key]) => project[key] !== null && project[key] !== "").map(([, label]) => label);
 }
 
+/** The project without the details `filledDetails` lists, for when the writer turns them off. */
+export function withoutDetails(project: AiProject): AiProject {
+  return {
+    ...project,
+    typeName: null,
+    logline: null,
+    synopsis: null,
+    genre: null,
+    tone: null,
+    targetRuntimeMinutes: null,
+    aspectRatio: null,
+    language: null,
+  };
+}
+
 function aspectNote(ratio: string) {
   const value = ratio.replace(/\s/g, "");
   if (VERTICAL_RATIOS.has(value)) return " (a vertical frame: favour close, simple compositions that read on a phone)";

@@ -3,7 +3,7 @@ import { generateText } from "ai";
 import type { NextRequest } from "next/server";
 
 import { joinCompletion } from "@/lib/ai/complete";
-import { scriptContext } from "@/lib/ai/context";
+import { scriptContext, withoutDetails } from "@/lib/ai/context";
 import { GHOST_TEXT_MODEL } from "@/lib/ai/models";
 import { completePrompt } from "@/lib/ai/prompts";
 import { languageModel } from "@/lib/ai/provider";
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/project
   const { projectId } = await ctx.params;
   const prepared = await prepareAiRequest(request, projectId, completeRequestSchema);
   if (!prepared.ok) return prepared.response;
-  const { project, body } = prepared;
+  const { body } = prepared;
+  const project = body.projectDetails ? prepared.project : withoutDetails(prepared.project);
 
   const { cursor, blocks } = body.script;
   const block = cursor && blocks[cursor.block];

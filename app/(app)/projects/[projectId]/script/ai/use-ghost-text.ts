@@ -6,11 +6,14 @@ import { useEffect } from "react";
 import { completeResponseSchema } from "@/lib/ai/schema";
 import { setGhostTextSource, type GhostTextSource } from "@/lib/screenplay/editor/ghost-text";
 
+import { useProjectDetails } from "./use-ai-model";
+
 /** After a failed request, suggestions rest for a while instead of failing on every pause. */
 const BACKOFF_MS = 30_000;
 
 /** Offers the rest of the line as you type, while `enabled`. Failures stay quiet. */
 export function useGhostText(editor: Editor | null, projectId: string, enabled: boolean) {
+  const [projectDetails] = useProjectDetails();
   useEffect(() => {
     if (!editor || !enabled) return;
     let restUntil = 0;
@@ -19,7 +22,7 @@ export function useGhostText(editor: Editor | null, projectId: string, enabled: 
       const response = await fetch(`/api/projects/${projectId}/ai/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ script }),
+        body: JSON.stringify({ projectDetails, script }),
         signal,
       });
       if (!response.ok) {
@@ -33,5 +36,5 @@ export function useGhostText(editor: Editor | null, projectId: string, enabled: 
     return () => {
       if (!editor.isDestroyed) setGhostTextSource(editor.view, null);
     };
-  }, [editor, projectId, enabled]);
+  }, [editor, projectId, enabled, projectDetails]);
 }

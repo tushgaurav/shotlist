@@ -1,7 +1,7 @@
 import { Output, smoothStream, streamText } from "ai";
 import type { NextRequest } from "next/server";
 
-import { scriptContext } from "@/lib/ai/context";
+import { scriptContext, withoutDetails } from "@/lib/ai/context";
 import { writePrompt } from "@/lib/ai/prompts";
 import { languageModel } from "@/lib/ai/provider";
 import { prepareAiRequest, textError, textStreamResponse } from "@/lib/ai/route";
@@ -14,7 +14,8 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/project
   const { projectId } = await ctx.params;
   const prepared = await prepareAiRequest(request, projectId, writeRequestSchema);
   if (!prepared.ok) return prepared.response;
-  const { project, body } = prepared;
+  const { body } = prepared;
+  const project = body.projectDetails ? prepared.project : withoutDetails(prepared.project);
 
   if (body.mode === "rewrite" && !body.script.selection) {
     return textError(400, "Select the lines to rewrite first.");
