@@ -231,12 +231,7 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
         {status === "conflict" && <ConflictBanner />}
       </div>
       <div className="relative flex flex-1">
-        <SceneSidebar
-          key={`scenes-${editorKey}`}
-          editor={editor}
-          shots={projectShots.store}
-          className={assistantOpen ? "hidden @min-[88rem]:flex" : undefined}
-        />
+        <SceneSidebar key={`scenes-${editorKey}`} editor={editor} shots={projectShots.store} />
         <div className="@container/page min-w-0 flex-1 bg-muted/60 px-3 py-6 sm:px-8 sm:py-10">
           <div className="screenplay-page relative">
             {editor ? <EditorContent editor={editor} /> : <PageSkeleton />}

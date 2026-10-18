@@ -59,7 +59,7 @@ export function AssistantPanel({ docked, ...props }: ChatProps & { docked: boole
 const WIDTH_KEY = "shotlist:assistant-width";
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 720;
-/** How much of the row the page keeps when the assistant is dragged wider (24rem). */
+/** How much room the page keeps when the assistant is dragged wider (24rem; see the aside's max width). */
 const PAGE_ROOM = 384;
 
 /** The width the writer dragged the assistant to, remembered in this browser. */
@@ -69,8 +69,13 @@ function useAssistantWidth() {
   return [width, (next: number | null) => writeLocalStorage(WIDTH_KEY, next === null ? null : String(next))] as const;
 }
 
+/** The other panels in the row (scenes, shots) are asides; hidden ones measure 0. */
 function clampWidth(width: number, panel: HTMLElement) {
-  const room = (panel.parentElement?.clientWidth ?? Infinity) - PAGE_ROOM;
+  const row = panel.parentElement;
+  let room = row ? row.clientWidth - PAGE_ROOM : Infinity;
+  for (const sibling of row?.children ?? []) {
+    if (sibling !== panel && sibling instanceof HTMLElement && sibling.tagName === "ASIDE") room -= sibling.offsetWidth;
+  }
   return Math.round(Math.max(MIN_WIDTH, Math.min(width, MAX_WIDTH, room)));
 }
 
@@ -127,7 +132,7 @@ function DockedAssistant(props: ChatProps) {
       ref={aside}
       aria-label="Assistant"
       style={width ? { width } : undefined}
-      className="sticky top-24 flex h-[calc(100svh-6rem)] w-80 max-w-[calc(100%-24rem)] shrink-0 flex-col border-l bg-background @7xl:w-96"
+      className="sticky top-24 flex h-[calc(100svh-6rem)] w-80 max-w-[calc(100%-24rem)] shrink-0 flex-col border-l bg-background @5xl:max-w-[calc(100%-40rem)] @7xl:w-96"
     >
       <div
         role="separator"
