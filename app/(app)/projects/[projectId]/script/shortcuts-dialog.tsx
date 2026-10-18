@@ -14,7 +14,7 @@ import { ELEMENT_LABELS, SHORTCUT_ORDER } from "@/lib/screenplay/elements";
 
 type Row = { keys: string[][]; action: string };
 
-export function ShortcutsDialog({ children }: { children: React.ReactNode }) {
+export function ShortcutsDialog({ children, ai = false }: { children: React.ReactNode; ai?: boolean }) {
   const isMac = useIsMac();
 
   const sections: { title: string; rows: Row[] }[] = [
@@ -37,6 +37,20 @@ export function ShortcutsDialog({ children }: { children: React.ReactNode }) {
         { keys: [["Esc"]], action: "Dismiss the suggestion" },
       ],
     },
+    ...(ai
+      ? [
+          {
+            title: "AI",
+            rows: [
+              { keys: [["Mod", "K"]], action: "Write here, or rewrite the selected lines" },
+              { keys: [["Mod", "Enter"]], action: "Keep the AI's lines" },
+              { keys: [["Esc"]], action: "Stop writing, or discard the AI's lines" },
+              { keys: [["Tab"]], action: "Accept an inline suggestion" },
+              { keys: [["Mod", "J"]], action: "Show or hide the assistant" },
+            ],
+          },
+        ]
+      : []),
     {
       title: "Formatting",
       rows: [
@@ -49,7 +63,7 @@ export function ShortcutsDialog({ children }: { children: React.ReactNode }) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
           <DialogDescription>

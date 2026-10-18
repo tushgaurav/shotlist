@@ -4,6 +4,7 @@ import { chainCommands } from "@tiptap/pm/commands";
 import type { Command } from "@tiptap/pm/state";
 
 import { ELEMENT_PLACEHOLDERS, isElementType, SHORTCUT_ORDER } from "../elements";
+import { AiSuggestion } from "./ai-suggestion";
 import { autocompletePlugin } from "./autocomplete";
 import {
   acceptSuggestion,
@@ -12,6 +13,7 @@ import {
   enter,
   setElementType,
 } from "./commands";
+import { acceptGhostText, dismissGhostText, ghostTextPlugin } from "./ghost-text";
 import { screenplayInputPlugin } from "./input";
 import { sceneIdsPlugin } from "./scene-ids";
 import { screenplaySchemaExtensions } from "./schema";
@@ -25,10 +27,10 @@ const ScreenplayBehavior = Extension.create({
     const shortcuts: Record<string, () => boolean> = {
       Enter: run(enter),
       "Shift-Enter": run(enter),
-      Tab: run(chainCommands(acceptSuggestion, cycleElement(1))),
+      Tab: run(chainCommands(acceptSuggestion, acceptGhostText, cycleElement(1))),
       "Shift-Tab": run(cycleElement(-1)),
       ArrowRight: run(acceptSuggestion),
-      Escape: run(dismissSuggestion),
+      Escape: run(chainCommands(dismissSuggestion, dismissGhostText)),
     };
     SHORTCUT_ORDER.forEach((type, index) => {
       shortcuts[`Mod-Alt-${index + 1}`] = run(setElementType(type));
@@ -37,7 +39,7 @@ const ScreenplayBehavior = Extension.create({
   },
 
   addProseMirrorPlugins() {
-    return [sceneIdsPlugin(), autocompletePlugin(), screenplayInputPlugin()];
+    return [sceneIdsPlugin(), autocompletePlugin(), ghostTextPlugin(), screenplayInputPlugin()];
   },
 });
 
@@ -45,6 +47,7 @@ export function screenplayEditorExtensions(): Extensions {
   return [
     ...screenplaySchemaExtensions(),
     ScreenplayBehavior,
+    AiSuggestion,
     UndoRedo,
     Placeholder.configure({
       placeholder: ({ node }) =>

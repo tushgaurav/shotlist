@@ -16,6 +16,7 @@ import { setElementType } from "@/lib/screenplay/editor/commands";
 import { ELEMENT_LABELS, isElementType, SHORTCUT_ORDER } from "@/lib/screenplay/elements";
 import type { TitlePage } from "@/lib/screenplay/types";
 
+import { AiToolbarControls, AssistantToggle, type AiControls } from "./ai/ai-menu";
 import { ExportMenu } from "./export-menu";
 import { ShortcutsDialog } from "./shortcuts-dialog";
 import { TitlePageDialog } from "./title-page-dialog";
@@ -30,6 +31,7 @@ type Props = {
   shotPanelOpen: boolean;
   onToggleShotPanel: () => void;
   onOpenTeleprompter: () => void;
+  ai: AiControls;
 };
 
 export function ScriptToolbar({
@@ -38,6 +40,7 @@ export function ScriptToolbar({
   shotPanelOpen,
   onToggleShotPanel,
   onOpenTeleprompter,
+  ai,
   ...titlePageProps
 }: Props) {
   const isMac = useIsMac();
@@ -112,6 +115,9 @@ export function ScriptToolbar({
           </Tooltip>
         ))}
 
+        <Separator orientation="vertical" className="mx-1.5 h-5!" />
+        <AiToolbarControls ai={ai} disabled={!editor || status === "conflict"} />
+
         <div className="ml-auto flex items-center gap-1">
           <SaveStatusIndicator status={status} tone={STATUS_TONES[status]} label={STATUS_LABELS[status]} />
           <Separator orientation="vertical" className="mx-1.5 h-5!" />
@@ -126,7 +132,7 @@ export function ScriptToolbar({
             </TooltipTrigger>
             <TooltipContent>Opens in a new tab</TooltipContent>
           </Tooltip>
-          <ShortcutsDialog>
+          <ShortcutsDialog ai={ai.enabled}>
             <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
               <KeyboardIcon />
             </Button>
@@ -146,6 +152,7 @@ export function ScriptToolbar({
             </TooltipTrigger>
             <TooltipContent>{shotPanelOpen ? "Hide" : "Show"} shots for this scene</TooltipContent>
           </Tooltip>
+          <AssistantToggle ai={ai} />
         </div>
       </div>
     </div>

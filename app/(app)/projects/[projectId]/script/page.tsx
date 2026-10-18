@@ -4,6 +4,8 @@ import { Courier_Prime } from "next/font/google";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { filledDetails } from "@/lib/ai/context";
+import { aiEnabled } from "@/lib/ai/provider";
 import { getProject } from "@/lib/dal/projects";
 import { getOrCreateScript } from "@/lib/dal/scripts";
 import { getShotList } from "@/lib/dal/shots";
@@ -51,6 +53,11 @@ async function ScriptLoader({ params }: { params: Promise<{ projectId: string }>
       }}
       shots={shots}
       imagesEnabled={storageEnabled()}
+      ai={{
+        enabled: aiEnabled(),
+        details: filledDetails({ ...project, typeName: project.type?.name ?? null }),
+        targetRuntimeMinutes: project.targetRuntimeMinutes,
+      }}
     />
   );
 }

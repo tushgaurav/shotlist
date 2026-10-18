@@ -43,7 +43,7 @@
 }
 
 .screenplay-page .ProseMirror > p {
-  margin: var(--sp-line) 0 0;
+  margin-top: var(--sp-line);
 }
 
 .screenplay-page .ProseMirror > p:first-child {
@@ -60,17 +60,20 @@
 }
 
 .screenplay-page .sp-character {
-  margin-left: 2.2in;
+  --sp-indent: 2.2in;
+  margin-left: var(--sp-indent);
   text-transform: uppercase;
 }
 
 .screenplay-page .sp-parenthetical {
-  margin-left: 1.6in;
+  --sp-indent: 1.6in;
+  margin-left: var(--sp-indent);
   max-width: 2in;
 }
 
 .screenplay-page .sp-dialogue {
-  margin-left: 1in;
+  --sp-indent: 1in;
+  margin-left: var(--sp-indent);
   max-width: 3.5in;
 }
 
@@ -102,4 +105,136 @@
 .screenplay-page .sp-suggestion {
   color: var(--sp-muted);
   pointer-events: none;
+}
+
+/* An inline AI suggestion for the rest of the line. */
+.screenplay-page .sp-ghost {
+  color: var(--sp-muted);
+  pointer-events: none;
+  animation: sp-ghost-in 160ms ease-out;
+}
+
+.screenplay-page .sp-ghost-hint {
+  margin-left: 0.6em;
+  padding: 0 0.35em;
+  border: 1px solid color-mix(in oklab, var(--sp-muted) 45%, transparent);
+  border-radius: 0.25rem;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  vertical-align: 0.15em;
+  white-space: nowrap;
+}
+
+@keyframes sp-ghost-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenplay-page .sp-ghost {
+    animation: none;
+  }
+}
+
+/* Lines the AI suggested and the writer hasn't accepted yet: tinted, with a rule in the margin. */
+.screenplay-page {
+  --sp-ai: var(--primary);
+  --sp-ai-ink: color-mix(in oklch, var(--sp-ink) 62%, var(--sp-ai));
+}
+
+.screenplay-page .sp-ai-suggested {
+  position: relative;
+  color: var(--sp-ai-ink);
+  animation: sp-ai-in 180ms ease-out;
+}
+
+.screenplay-page .sp-ai-suggested::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--sp-line) * -1);
+  bottom: 0;
+  left: calc(-0.35in - var(--sp-indent, 0in));
+  width: 2px;
+  border-radius: 1px;
+  background: var(--sp-ai);
+  pointer-events: none;
+}
+
+.screenplay-page .sp-ai-suggested.sp-ai-first::after {
+  top: 0;
+}
+
+/* Holds the suggestion's toolbar (positioned over it) between the suggestion and the next line. */
+.screenplay-page .sp-ai-bar-space {
+  height: 3.25rem;
+  margin-top: 0.25rem;
+  user-select: none;
+  pointer-events: none;
+}
+
+.screenplay-page .sp-ai-replacing {
+  opacity: 0.4;
+  transition: opacity 200ms ease-out;
+}
+
+.screenplay-page .sp-ai-hidden {
+  display: none;
+}
+
+.screenplay-page .sp-ai-pending {
+  margin-top: var(--sp-line);
+  width: fit-content;
+  background: linear-gradient(90deg, var(--sp-muted) 25%, var(--sp-ai) 50%, var(--sp-muted) 75%) 0 0 / 200% 100%;
+  background-clip: text;
+  color: transparent;
+  user-select: none;
+  animation: sp-ai-shimmer 1.4s linear infinite;
+}
+
+.screenplay-page .ProseMirror > .sp-ai-pending:first-child {
+  margin-top: 0;
+}
+
+.screenplay-page .sp-ai-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background: var(--sp-ai);
+  opacity: 0.7;
+  animation: sp-ai-blink 1s steps(2, jump-none) infinite;
+}
+
+@keyframes sp-ai-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes sp-ai-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes sp-ai-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenplay-page .sp-ai-suggested,
+  .screenplay-page .sp-ai-pending,
+  .screenplay-page .sp-ai-caret {
+    animation: none;
+  }
+
+  .screenplay-page .sp-ai-pending {
+    color: var(--sp-muted);
+  }
 }
