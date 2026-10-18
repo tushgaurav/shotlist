@@ -18,12 +18,14 @@ export function DetailsChip({ details }: { details: string[] }) {
       <TooltipTrigger asChild>
         <label
           className={cn(
-            "inline-flex h-6 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-xs transition-colors select-none hover:bg-muted hover:text-foreground",
+            "inline-flex h-6 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-xs whitespace-nowrap transition-colors select-none hover:bg-muted hover:text-foreground",
             enabled ? "text-foreground" : "text-muted-foreground",
           )}
         >
           <Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(checked === true)} className="size-3.5" />
-          Use project details
+          {/* Shortens inside a narrow `@container/ai-controls`; without that container the full label shows. */}
+          <span className="@max-[21rem]/ai-controls:hidden">Use Project Details</span>
+          <span className="hidden @max-[21rem]/ai-controls:inline">Details</span>
         </label>
       </TooltipTrigger>
       <TooltipContent className="block max-w-56">

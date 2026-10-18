@@ -368,7 +368,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
             aria-label="Message the assistant"
             className="field-sizing-content block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-2.5 text-sm outline-none placeholder:text-muted-foreground"
           />
-          <div className="flex items-center gap-1 px-1.5 pb-1.5">
+          <div className="@container/ai-controls flex items-center gap-1 px-1.5 pb-1.5">
             <ModelSelect />
             <DetailsChip details={details} />
             {busy ? (
