@@ -14,7 +14,7 @@ export function isElementType(value: string): value is ElementType {
 }
 
 export const ELEMENT_LABELS: Record<ElementType, string> = {
-  sceneHeading: "Scene heading",
+  sceneHeading: "Scene Heading",
   action: "Action",
   character: "Character",
   parenthetical: "Parenthetical",

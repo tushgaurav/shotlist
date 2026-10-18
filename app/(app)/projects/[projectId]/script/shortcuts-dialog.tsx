@@ -65,7 +65,7 @@ export function ShortcutsDialog({ children, ai = false }: { children: React.Reac
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Keyboard shortcuts</DialogTitle>
+          <DialogTitle>Keyboard Shortcuts</DialogTitle>
           <DialogDescription>
             Start a line with INT. or EXT. for a scene heading. Type ( under a character for a
             parenthetical. An all-caps line ending in TO: becomes a transition when you press Enter.

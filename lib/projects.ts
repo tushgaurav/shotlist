@@ -37,10 +37,10 @@ export const DEFAULT_PROJECT_TYPE_ICON: ProjectTypeIcon = "folder";
 
 /** Every account starts with these. They're ordinary types: the user can rename or delete them. */
 export const DEFAULT_PROJECT_TYPES: { name: string; icon: ProjectTypeIcon }[] = [
-  { name: "Short film", icon: "film" },
-  { name: "Feature film", icon: "projector" },
+  { name: "Short Film", icon: "film" },
+  { name: "Feature Film", icon: "projector" },
   { name: "Commercial", icon: "megaphone" },
-  { name: "Music video", icon: "music" },
+  { name: "Music Video", icon: "music" },
 ];
 
 export type ProjectTypeOption = { id: string; name: string; icon: ProjectTypeIcon };
@@ -90,7 +90,7 @@ export const PROJECT_GENRES = options([
   "Horror",
   "Action",
   "Romance",
-  "Sci-fi",
+  "Sci-Fi",
   "Fantasy",
   "Mystery",
   "Crime",
@@ -103,12 +103,12 @@ export const PROJECT_GENRES = options([
 
 export const PROJECT_ASPECT_RATIOS: PresetOption[] = [
   { value: "16:9", hint: "HD, YouTube" },
-  { value: "2.39:1", hint: "Anamorphic widescreen" },
-  { value: "1.85:1", hint: "Flat widescreen" },
+  { value: "2.39:1", hint: "Anamorphic Widescreen" },
+  { value: "1.85:1", hint: "Flat Widescreen" },
   { value: "2:1", hint: "Univisium" },
-  { value: "4:3", hint: "Academy, classic TV" },
+  { value: "4:3", hint: "Academy, Classic TV" },
   { value: "1:1", hint: "Square" },
-  { value: "4:5", hint: "Instagram feed" },
+  { value: "4:5", hint: "Instagram Feed" },
   { value: "9:16", hint: "Vertical: Reels, Shorts, TikTok" },
 ];
 

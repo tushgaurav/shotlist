@@ -83,7 +83,7 @@ export const StoryboardGroup = memo(function StoryboardGroup({
               className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed text-sm text-muted-foreground transition-colors outline-none hover:border-foreground/30 hover:text-foreground focus-visible:border-ring focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <PlusIcon className="size-5" aria-hidden />
-              {group.kind === "scene" ? `Add shot to scene ${group.scene.number}` : "Add standalone shot"}
+              {group.kind === "scene" ? `Add Shot to Scene ${group.scene.number}` : "Add Standalone Shot"}
             </button>
           </li>
         )}

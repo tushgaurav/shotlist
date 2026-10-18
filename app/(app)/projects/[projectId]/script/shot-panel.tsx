@@ -99,7 +99,7 @@ export function ShotPanel({ editor, projectId, shots, imagesEnabled, saver, onCl
 
   return (
     <aside
-      aria-label="Shots in this scene"
+      aria-label="Shots in This Scene"
       className={cn(
         "sticky top-24 h-[calc(100svh-6rem)] w-80 shrink-0 flex-col border-l bg-background",
         className,
@@ -108,25 +108,25 @@ export function ShotPanel({ editor, projectId, shots, imagesEnabled, saver, onCl
       <div className="flex items-start gap-1 pt-3 pr-2 pb-2 pl-4">
         <div className="min-w-0 flex-1 pt-1">
           <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {scene ? `Scene ${scene.number} shots` : "Shots"}
+            {scene ? `Scene ${scene.number} Shots` : "Shots"}
           </h2>
           {scene && (
             <p className="mt-1 truncate font-mono text-xs tracking-tight" title={scene.heading}>
-              {scene.heading || <span className="font-sans text-muted-foreground italic">Untitled scene</span>}
+              {scene.heading || <span className="font-sans text-muted-foreground italic">Untitled Scene</span>}
             </p>
           )}
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button asChild variant="ghost" size="icon-sm">
-              <Link href={`/projects/${projectId}/shots`} aria-label="Open the shot list">
+              <Link href={`/projects/${projectId}/shots`} aria-label="Open the Shot List">
                 <ArrowUpRightIcon />
               </Link>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Open the shot list</TooltipContent>
+          <TooltipContent>Open the Shot List</TooltipContent>
         </Tooltip>
-        <Button variant="ghost" size="icon-sm" aria-label="Hide shots" onClick={onClose}>
+        <Button variant="ghost" size="icon-sm" aria-label="Hide Shots" onClick={onClose}>
           <XIcon />
         </Button>
       </div>
@@ -156,11 +156,11 @@ export function ShotPanel({ editor, projectId, shots, imagesEnabled, saver, onCl
             <Input
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              aria-label={`New shot for scene ${scene.number}`}
+              aria-label={`New Shot for Scene ${scene.number}`}
               placeholder="Describe a shot, then press Enter"
               className="h-8 text-sm"
             />
-            <Button type="submit" size="icon-sm" variant="outline" aria-label="Add shot" disabled={!draft.trim()}>
+            <Button type="submit" size="icon-sm" variant="outline" aria-label="Add Shot" disabled={!draft.trim()}>
               <PlusIcon />
             </Button>
           </form>

@@ -24,7 +24,7 @@ export default function SettingsLayout({ children }: LayoutProps<"/settings">) {
       </AppHeader>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Account settings</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Account Settings</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Your profile, password, signed-in devices and project types.
           </p>

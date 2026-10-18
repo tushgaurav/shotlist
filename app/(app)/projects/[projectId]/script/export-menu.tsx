@@ -129,7 +129,7 @@ function PdfForm({
       </DialogHeader>
       <FieldGroup className="gap-4">
         <Field>
-          <FieldLabel htmlFor="pdf-paper">Paper size</FieldLabel>
+          <FieldLabel htmlFor="pdf-paper">Paper Size</FieldLabel>
           <Select value={options.paper} onValueChange={(paper) => setOptions({ ...options, paper: paper as PaperSize })}>
             <SelectTrigger id="pdf-paper" className="w-full">
               <SelectValue />
@@ -149,7 +149,7 @@ function PdfForm({
             checked={options.titlePage}
             onCheckedChange={(checked) => setOptions({ ...options, titlePage: checked === true })}
           />
-          <FieldLabel htmlFor="pdf-title-page">Title page</FieldLabel>
+          <FieldLabel htmlFor="pdf-title-page">Title Page</FieldLabel>
         </Field>
         <Field orientation="horizontal">
           <Checkbox
@@ -158,7 +158,7 @@ function PdfForm({
             onCheckedChange={(checked) => setOptions({ ...options, sceneNumbers: checked === true })}
           />
           <FieldContent>
-            <FieldLabel htmlFor="pdf-scene-numbers">Scene numbers</FieldLabel>
+            <FieldLabel htmlFor="pdf-scene-numbers">Scene Numbers</FieldLabel>
             <FieldDescription>In both margins, as in a shooting script.</FieldDescription>
           </FieldContent>
         </Field>

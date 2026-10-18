@@ -59,13 +59,13 @@ export function AiToolbarControls({ ai, disabled }: { ai: AiControls; disabled: 
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {ai.enabled ? "Write or rewrite with AI" : "AI writing isn't set up"}{" "}
+          {ai.enabled ? "Write or Rewrite with AI" : "AI writing isn't set up"}{" "}
           <Kbd>{shortcutLabel(["Mod", "K"], isMac)}</Kbd>
         </TooltipContent>
       </Tooltip>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label="AI options" disabled={disabled} className="w-6 rounded-l-none">
+          <Button variant="ghost" size="icon-sm" aria-label="AI Options" disabled={disabled} className="w-6 rounded-l-none">
             <ChevronDownIcon />
           </Button>
         </DropdownMenuTrigger>
@@ -80,12 +80,12 @@ export function AiToolbarControls({ ai, disabled }: { ai: AiControls; disabled: 
           )}
           <DropdownMenuItem disabled={off || ai.busy} onSelect={ai.onWrite}>
             <SparklesIcon />
-            Write or rewrite…
+            Write or Rewrite…
             <DropdownMenuShortcut>{shortcutLabel(["Mod", "K"], isMac)}</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem disabled={off || ai.busy} onSelect={ai.onDraft}>
             <FilmIcon />
-            Draft from project details…
+            Draft from Project Details…
           </DropdownMenuItem>
           <DropdownMenuCheckboxItem disabled={off} checked={ai.assistantOpen} onCheckedChange={ai.onToggleAssistant}>
             Assistant
@@ -93,7 +93,7 @@ export function AiToolbarControls({ ai, disabled }: { ai: AiControls; disabled: 
           </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
           <DropdownMenuCheckboxItem disabled={off} checked={inline} onCheckedChange={(checked) => setInline(checked === true)}>
-            Inline suggestions
+            Inline Suggestions
           </DropdownMenuCheckboxItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger disabled={off}>
@@ -138,7 +138,7 @@ export function AssistantToggle({ ai }: { ai: AiControls }) {
         </Button>
       </TooltipTrigger>
       <TooltipContent>
-        {ai.assistantOpen ? "Hide" : "Show"} the assistant <Kbd>{shortcutLabel(["Mod", "J"], isMac)}</Kbd>
+        {ai.assistantOpen ? "Hide" : "Show"} the Assistant <Kbd>{shortcutLabel(["Mod", "J"], isMac)}</Kbd>
       </TooltipContent>
     </Tooltip>
   );

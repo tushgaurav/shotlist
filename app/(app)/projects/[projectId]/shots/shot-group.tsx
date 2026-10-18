@@ -84,7 +84,7 @@ export const ShotGroupSection = memo(function ShotGroupSection({
               className="flex items-center gap-1.5 py-1.5 pr-3 pl-8 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:outline-none"
             >
               <PlusIcon className="size-3.5" aria-hidden />
-              {group.kind === "scene" ? `Add shot to scene ${group.scene.number}` : "Add standalone shot"}
+              {group.kind === "scene" ? `Add Shot to Scene ${group.scene.number}` : "Add Standalone Shot"}
             </button>
           </div>
         </div>
@@ -95,7 +95,7 @@ export const ShotGroupSection = memo(function ShotGroupSection({
 
 export function groupName(group: ShotGroup) {
   if (group.kind === "scene") return `Scene ${group.scene.number}`;
-  return group.kind === "unlinked" ? "Unlinked shots" : "Standalone shots";
+  return group.kind === "unlinked" ? "Unlinked Shots" : "Standalone Shots";
 }
 
 /** In the table it's a grid row as wide as the columns; elsewhere (storyboard) a plain bar. */
@@ -125,7 +125,7 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
               {group.scene.number}
             </span>
             <h2 className="truncate font-mono text-[13px] font-semibold tracking-wide uppercase">
-              {group.scene.heading || "Untitled scene"}
+              {group.scene.heading || "Untitled Scene"}
             </h2>
             {summary}
             {sceneChanged(group.scene, count) && (
@@ -137,7 +137,7 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
                       tabIndex={0}
                       className="border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
                     >
-                      Scene changed
+                      Scene Changed
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-64">
@@ -146,13 +146,13 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
                   </TooltipContent>
                 </Tooltip>
                 <Button variant="ghost" size="xs" onClick={() => actions.markReviewed(group.scene.id)}>
-                  Mark reviewed
+                  Mark Reviewed
                 </Button>
               </>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-xs" aria-label={`Scene ${group.scene.number} actions`}>
+                <Button variant="ghost" size="icon-xs" aria-label={`Scene ${group.scene.number} Actions`}>
                   <EllipsisIcon />
                 </Button>
               </DropdownMenuTrigger>
@@ -168,11 +168,11 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
               >
                 <DropdownMenuItem onSelect={() => (added.current = actions.add(group.scene.id))}>
                   <PlusIcon />
-                  Add shot
+                  Add Shot
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={count === 0} onSelect={() => actions.requestRenumber(group.scene)}>
                   <ListOrderedIcon />
-                  Renumber shots…
+                  Renumber Shots…
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -180,7 +180,7 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
         ) : group.kind === "unlinked" ? (
           <>
             <TriangleAlertIcon className="size-4 shrink-0 text-amber-600" aria-hidden />
-            <h2 className="text-sm font-medium">Unlinked shots</h2>
+            <h2 className="text-sm font-medium">Unlinked Shots</h2>
             {summary}
             <span className="truncate text-xs text-muted-foreground">
               Their scenes were removed from the script. Move them to a scene or delete them.
@@ -188,7 +188,7 @@ export function GroupHeader({ group, minWidth }: { group: ShotGroup; minWidth?: 
           </>
         ) : (
           <>
-            <h2 className="text-sm font-medium">Standalone shots</h2>
+            <h2 className="text-sm font-medium">Standalone Shots</h2>
             {summary}
             <span className="truncate text-xs text-muted-foreground">
               B-roll, inserts and pickups that aren&apos;t tied to a scene.

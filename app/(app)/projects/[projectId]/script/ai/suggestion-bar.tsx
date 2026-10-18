@@ -141,7 +141,7 @@ export function SuggestionBar({ editor, writer }: { editor: Editor; writer: AiWr
         <div
           ref={barRef}
           role="toolbar"
-          aria-label="AI suggestion"
+          aria-label="AI Suggestion"
           style={{ top: position.top, left: position.left }}
           className="fixed z-40 flex -translate-x-1/2 items-center gap-1 rounded-xl border bg-popover/95 p-1 text-sm text-popover-foreground shadow-lg backdrop-blur-sm duration-150 animate-in fade-in-0 slide-in-from-top-1"
         >

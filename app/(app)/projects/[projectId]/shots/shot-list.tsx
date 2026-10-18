@@ -196,7 +196,7 @@ export function ShotList({ projectId, projectTitle, data, imagesEnabled }: Props
   const viewing = viewingId ? (state.shots.find((shot) => shot.id === viewingId) ?? null) : null;
 
   const exportCsv = () => {
-    const fileName = `${safeFileName(projectTitle, "Project")} – Shot list.csv`;
+    const fileName = `${safeFileName(projectTitle, "Project")} – Shot List.csv`;
     downloadText(shotListCsv(state.scenes, state.shots), fileName, "text/csv;charset=utf-8");
   };
 
@@ -206,19 +206,19 @@ export function ShotList({ projectId, projectTitle, data, imagesEnabled }: Props
       <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
         <EmptyState
           icon={ClapperboardIcon}
-          title="No scenes to plan yet"
+          title="No Scenes to Plan Yet"
           description="Shots are planned scene by scene. Write scene headings in the script and they'll show up here, or start with standalone shots like B-roll."
         >
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>
               <Link href={`/projects/${projectId}/script`}>
                 <FileTextIcon data-icon="inline-start" />
-                Open the script
+                Open the Script
               </Link>
             </Button>
             <Button variant="outline" onClick={() => actions.focusShot(actions.add(null))}>
               <PlusIcon data-icon="inline-start" />
-              Add standalone shot
+              Add Standalone Shot
             </Button>
           </div>
         </EmptyState>
@@ -258,7 +258,7 @@ export function ShotList({ projectId, projectTitle, data, imagesEnabled }: Props
           ))}
         </div>
       ) : (
-        <div role="grid" aria-label="Shot list" ref={containerRef} className="relative flex-1 pb-24">
+        <div role="grid" aria-label="Shot List" ref={containerRef} className="relative flex-1 pb-24">
           <div
             role="rowgroup"
             ref={headerRef}

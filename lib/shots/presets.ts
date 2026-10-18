@@ -3,19 +3,19 @@ export type PresetOption = { value: string; hint?: string };
 const options = (values: string[]): PresetOption[] => values.map((value) => ({ value }));
 
 export const SHOT_SIZES: PresetOption[] = [
-  { value: "EWS", hint: "Extreme wide" },
+  { value: "EWS", hint: "Extreme Wide" },
   { value: "WS", hint: "Wide" },
-  { value: "MWS", hint: "Medium wide" },
+  { value: "MWS", hint: "Medium Wide" },
   { value: "MS", hint: "Medium" },
-  { value: "MCU", hint: "Medium close-up" },
-  { value: "CU", hint: "Close-up" },
-  { value: "ECU", hint: "Extreme close-up" },
-  { value: "Insert", hint: "Detail of an object" },
+  { value: "MCU", hint: "Medium Close-Up" },
+  { value: "CU", hint: "Close-Up" },
+  { value: "ECU", hint: "Extreme Close-Up" },
+  { value: "Insert", hint: "Detail of an Object" },
 ];
 
 export const SHOT_TYPES = options([
   "Single",
-  "Two-shot",
+  "Two-Shot",
   "Group",
   "OTS",
   "POV",
@@ -26,13 +26,13 @@ export const SHOT_TYPES = options([
 ]);
 
 export const SHOT_ANGLES = options([
-  "Eye level",
+  "Eye Level",
   "High",
   "Low",
   "Dutch",
   "Overhead",
-  "Bird's eye",
-  "Worm's eye",
+  "Bird's Eye",
+  "Worm's Eye",
   "Shoulder",
 ]);
 
@@ -40,8 +40,8 @@ export const SHOT_MOVEMENTS = options([
   "Static",
   "Pan",
   "Tilt",
-  "Push in",
-  "Pull out",
+  "Push In",
+  "Pull Out",
   "Dolly",
   "Truck",
   "Tracking",
@@ -62,13 +62,13 @@ export const SHOT_FRAME_RATES: PresetOption[] = [
   { value: "24" },
   { value: "25" },
   { value: "30" },
-  { value: "48", hint: "Slow motion at 24" },
+  { value: "48", hint: "Slow Motion at 24" },
   { value: "50" },
-  { value: "60", hint: "Slow motion" },
-  { value: "120", hint: "Slow motion" },
+  { value: "60", hint: "Slow Motion" },
+  { value: "120", hint: "Slow Motion" },
 ];
 
-export const SHOT_SOUND = options(["Sync", "MOS", "Wild track", "Playback"]);
+export const SHOT_SOUND = options(["Sync", "MOS", "Wild Track", "Playback"]);
 
 export const SHOT_EQUIPMENT = options([
   "Tripod",
@@ -79,6 +79,6 @@ export const SHOT_EQUIPMENT = options([
   "Jib",
   "Crane",
   "Drone",
-  "Car mount",
-  "Shoulder rig",
+  "Car Mount",
+  "Shoulder Rig",
 ]);

@@ -8,7 +8,7 @@ import { storageEnabled } from "@/lib/storage/s3";
 
 import { ShotList } from "./shot-list";
 
-export const metadata: Metadata = { title: "Shot list" };
+export const metadata: Metadata = { title: "Shot List" };
 
 export default function ShotsPage({ params }: PageProps<"/projects/[projectId]/shots">) {
   return (

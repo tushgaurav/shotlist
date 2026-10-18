@@ -139,7 +139,7 @@ export function SceneSidebar({ editor, shots }: { editor: Editor | null; shots: 
                 </span>
                 <span className="line-clamp-2 flex-1 font-mono leading-5 tracking-tight">
                   {scene.heading || (
-                    <span className="font-sans text-muted-foreground italic">Untitled scene</span>
+                    <span className="font-sans text-muted-foreground italic">Untitled Scene</span>
                   )}
                 </span>
                 <ShotCount count={shotCounts.get(scene.id) ?? 0} />

@@ -33,7 +33,7 @@ Built for one user first. Structured so it can become a multi-user product later
 | Term | Meaning |
 | --- | --- |
 | Project | One production (short, music video, commercial, feature). Has one script and one shot list. |
-| Project type | A label for the kind of project, with an icon. Each user has their own list ("Short film", "YouTube video"…), seeded with four defaults at sign-up. |
+| Project type | A label for the kind of project, with an icon. Each user has their own list ("Short Film", "YouTube Video"…), seeded with four defaults at sign-up. |
 | Details | A project's optional metadata: logline, synopsis, genre, tone, target runtime, aspect ratio, language, and a header image. Everything but the image is given to the AI writer as context (see 5, AI writing). |
 | Script | The screenplay. Has one **working draft** (what you edit, autosaved) and many **versions**. |
 | Version | An immutable, named snapshot of the script, e.g. "Draft 2" or "Shooting Script". |

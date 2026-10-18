@@ -147,7 +147,7 @@ function DraftFlow({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FilmIcon className="size-4 text-primary" />
-            Draft from your project details
+            Draft from Your Project Details
           </DialogTitle>
           <DialogDescription>
             The AI plans the scenes first. You can change the plan before anything is written
@@ -193,7 +193,7 @@ function DraftFlow({
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Plan scenes</Button>
+            <Button type="submit">Plan Scenes</Button>
           </div>
         </DialogFooter>
       </form>
@@ -208,7 +208,7 @@ function DraftFlow({
   return (
     <>
       <DialogHeader className="border-b px-6 pt-6 pb-4">
-        <DialogTitle>{streaming ? "Planning scenes…" : "The plan"}</DialogTitle>
+        <DialogTitle>{streaming ? "Planning Scenes…" : "The Plan"}</DialogTitle>
         <DialogDescription>
           {shown.length > 0
             ? `${shown.length} scene${shown.length === 1 ? "" : "s"}, about ${pagesLabel(total)}${
@@ -232,7 +232,7 @@ function DraftFlow({
                       value={scene.heading}
                       onChange={(event) => update(scene.key, { heading: event.target.value })}
                       maxLength={200}
-                      aria-label={`Scene ${index + 1} heading`}
+                      aria-label={`Scene ${index + 1} Heading`}
                       className="font-mono text-xs uppercase"
                     />
                     <Input
@@ -242,7 +242,7 @@ function DraftFlow({
                       step={0.5}
                       value={scene.estimatedPages}
                       onChange={(event) => update(scene.key, { estimatedPages: Math.min(Math.max(Number(event.target.value) || 0, 0), 30) })}
-                      aria-label={`Scene ${index + 1} length in pages`}
+                      aria-label={`Scene ${index + 1} Length in Pages`}
                       title="Pages"
                       className="w-20 shrink-0"
                     />
@@ -251,22 +251,22 @@ function DraftFlow({
                     value={scene.summary}
                     onChange={(event) => update(scene.key, { summary: event.target.value })}
                     maxLength={2000}
-                    aria-label={`Scene ${index + 1} summary`}
+                    aria-label={`Scene ${index + 1} Summary`}
                     className="min-h-12 text-sm"
                   />
                 </div>
                 <div className="flex shrink-0 flex-col gap-0.5 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                  <Button type="button" variant="ghost" size="icon-xs" aria-label="Move up" disabled={index === 0} onClick={() => move(index, -1)}>
+                  <Button type="button" variant="ghost" size="icon-xs" aria-label="Move Up" disabled={index === 0} onClick={() => move(index, -1)}>
                     <ArrowUpIcon />
                   </Button>
-                  <Button type="button" variant="ghost" size="icon-xs" aria-label="Move down" disabled={index === shown.length - 1} onClick={() => move(index, 1)}>
+                  <Button type="button" variant="ghost" size="icon-xs" aria-label="Move Down" disabled={index === shown.length - 1} onClick={() => move(index, 1)}>
                     <ArrowDownIcon />
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-xs"
-                    aria-label={`Remove scene ${index + 1}`}
+                    aria-label={`Remove Scene ${index + 1}`}
                     onClick={() => setScenes((current) => current?.filter((item) => item.key !== scene.key) ?? null)}
                   >
                     <Trash2Icon />
@@ -305,7 +305,7 @@ function DraftFlow({
             }
           >
             <PlusIcon data-icon="inline-start" />
-            Add scene
+            Add Scene
           </Button>
         )}
 
@@ -331,10 +331,10 @@ function DraftFlow({
         <div className="flex gap-2">
           <Button type="button" variant="outline" disabled={streaming} onClick={plan}>
             <RotateCwIcon data-icon="inline-start" />
-            Plan again
+            Plan Again
           </Button>
           <Button type="button" disabled={streaming || !scenes?.some((scene) => scene.heading.trim())} onClick={write}>
-            Write the draft
+            Write the Draft
           </Button>
         </div>
       </DialogFooter>

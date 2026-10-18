@@ -32,7 +32,7 @@ export function SidebarToggle() {
         <SidebarTrigger className="-ml-1" />
       </TooltipTrigger>
       <TooltipContent side="bottom">
-        Toggle sidebar <Kbd>{shortcutLabel(["Mod", "B"], isMac)}</Kbd>
+        Toggle Sidebar <Kbd>{shortcutLabel(["Mod", "B"], isMac)}</Kbd>
       </TooltipContent>
     </Tooltip>
   );
@@ -65,9 +65,9 @@ export function ProjectSwitcher({
             variant="outline"
             size="sm"
             className="max-w-48 sm:max-w-72"
-            aria-label={current ? `Switch project, current: ${current.title}` : "Select a project"}
+            aria-label={current ? `Switch project, current: ${current.title}` : "Select a Project"}
           >
-            <span className="truncate">{current?.title ?? "Select project"}</span>
+            <span className="truncate">{current?.title ?? "Select Project"}</span>
             <ChevronsUpDownIcon data-icon="inline-end" className="text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
@@ -95,12 +95,12 @@ export function ProjectSwitcher({
           <DropdownMenuItem asChild>
             <Link href="/projects">
               <LayoutGridIcon />
-              All projects
+              All Projects
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setCreatingOn(pathname)}>
             <PlusIcon />
-            New project
+            New Project
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

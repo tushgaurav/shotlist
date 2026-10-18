@@ -137,7 +137,7 @@ function DockedAssistant(props: ChatProps) {
       <div
         role="separator"
         aria-orientation="vertical"
-        aria-label="Resize the assistant"
+        aria-label="Resize the Assistant"
         aria-valuemin={MIN_WIDTH}
         aria-valuemax={MAX_WIDTH}
         aria-valuenow={width ?? undefined}
@@ -261,13 +261,13 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
         <h2 className="flex-1 text-sm font-medium">Assistant</h2>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="New chat" disabled={messages.length === 0} onClick={newChat}>
+            <Button variant="ghost" size="icon-sm" aria-label="New Chat" disabled={messages.length === 0} onClick={newChat}>
               <MessageSquarePlusIcon />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>New chat</TooltipContent>
+          <TooltipContent>New Chat</TooltipContent>
         </Tooltip>
-        <Button variant="ghost" size="icon-sm" aria-label="Close assistant" onClick={onClose}>
+        <Button variant="ghost" size="icon-sm" aria-label="Close Assistant" onClick={onClose}>
           <XIcon />
         </Button>
       </div>
@@ -285,7 +285,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
         {messages.length === 0 ? (
           <div className="flex h-full flex-col justify-end gap-3 pb-2">
             <div>
-              <p className="text-sm font-medium">Ask about your script</p>
+              <p className="text-sm font-medium">Ask About Your Script</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 The assistant reads the whole script and your project details. Ask for notes or
                 ideas, or ask it to write; edits show up in the script for you to accept.
@@ -370,7 +370,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
             rows={2}
             maxLength={8000}
             placeholder={blank ? "Ask anything about the project…" : "Ask about the script, or ask for a change…"}
-            aria-label="Message the assistant"
+            aria-label="Message the Assistant"
             className="field-sizing-content block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-2.5 text-sm outline-none placeholder:text-muted-foreground"
           />
           <div className="@container/ai-controls flex items-center gap-1 px-1.5 pb-1.5">

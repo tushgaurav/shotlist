@@ -35,7 +35,7 @@ export function TitlePageDialog(props: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          Title page
+          Title Page
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
@@ -50,7 +50,7 @@ const FIELDS: { name: keyof TitlePage; label: string; placeholder?: string; mult
   { name: "credit", label: "Credit", placeholder: "Written by" },
   { name: "author", label: "Author" },
   { name: "source", label: "Source", placeholder: "Based on the novel by…", multiline: true },
-  { name: "draftDate", label: "Draft date", placeholder: "e.g. First draft, 17 Oct 2026" },
+  { name: "draftDate", label: "Draft Date", placeholder: "e.g. First draft, 17 Oct 2026" },
   { name: "contact", label: "Contact", placeholder: "Email, phone, agent", multiline: true },
 ];
 
@@ -84,7 +84,7 @@ function TitlePageForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>Title page</DialogTitle>
+        <DialogTitle>Title Page</DialogTitle>
         <DialogDescription>Printed on the first page when you export the script.</DialogDescription>
       </DialogHeader>
       <FieldGroup className="gap-4">

@@ -6,7 +6,7 @@ import { listProjectTypes } from "@/lib/dal/project-types";
 import { SettingsCardSkeleton } from "../settings-card";
 import { ProjectTypeList } from "./project-type-list";
 
-export const metadata: Metadata = { title: "Project types" };
+export const metadata: Metadata = { title: "Project Types" };
 
 export default function ProjectTypesPage() {
   return (

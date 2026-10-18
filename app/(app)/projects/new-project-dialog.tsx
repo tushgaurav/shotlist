@@ -51,7 +51,7 @@ export function NewProjectButton(props: React.ComponentProps<typeof Button>) {
   return (
     <Button {...props}>
       <PlusIcon data-icon="inline-start" />
-      New project
+      New Project
     </Button>
   );
 }
@@ -64,7 +64,7 @@ function NewProjectForm({ types, defaultTypeId }: NewProjectOptions) {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>New project</DialogTitle>
+        <DialogTitle>New Project</DialogTitle>
         <DialogDescription>
           One project per production. You can add a logline, header image and more under Details.
         </DialogDescription>
@@ -95,7 +95,7 @@ function NewProjectForm({ types, defaultTypeId }: NewProjectOptions) {
           </Button>
         </DialogClose>
         <Button type="submit" disabled={pending}>
-          {pending ? "Creating…" : "Create project"}
+          {pending ? "Creating…" : "Create Project"}
         </Button>
       </DialogFooter>
     </form>

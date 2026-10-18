@@ -49,8 +49,8 @@ describe("describeDevice", () => {
   });
 
   it("falls back when it can't tell", () => {
-    expect(label(null)).toBe("Unknown device");
-    expect(label("curl/8.7.1")).toBe("Unknown device");
+    expect(label(null)).toBe("Unknown Device");
+    expect(label("curl/8.7.1")).toBe("Unknown Device");
     expect(label("Mozilla/5.0 (X11; Linux x86_64) SomeBrowser/1.0")).toBe("Linux");
   });
 });

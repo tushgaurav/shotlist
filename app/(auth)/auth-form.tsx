@@ -44,7 +44,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">{isSignUp ? "Create your account" : "Sign in"}</CardTitle>
+        <CardTitle className="text-lg">{isSignUp ? "Create Your Account" : "Sign In"}</CardTitle>
         <CardDescription>
           {isSignUp
             ? "Set up the account you'll use to plan your productions."
@@ -77,7 +77,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             </Field>
             <FieldError>{error}</FieldError>
             <Button type="submit" size="lg" disabled={pending}>
-              {pending ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
+              {pending ? "Please wait…" : isSignUp ? "Create Account" : "Sign In"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               {isSignUp ? "Already have an account? " : "No account yet? "}
@@ -85,7 +85,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
                 href={isSignUp ? "/sign-in" : "/sign-up"}
                 className="font-medium text-foreground underline-offset-4 hover:underline"
               >
-                {isSignUp ? "Sign in" : "Create one"}
+                {isSignUp ? "Sign In" : "Create One"}
               </Link>
             </p>
           </FieldGroup>

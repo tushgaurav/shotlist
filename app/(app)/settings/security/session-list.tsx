@@ -33,12 +33,12 @@ export function SessionList({ sessions }: { sessions: SessionItem[] }) {
 
   return (
     <SettingsCard
-      title="Signed-in devices"
+      title="Signed-In Devices"
       description="Sign out of any you don't recognise, or no longer use."
       action={
         others > 0 && (
           <Button variant="outline" size="sm" disabled={pending} onClick={signOutOthers}>
-            {pending ? "Signing out…" : "Sign out all others"}
+            {pending ? "Signing out…" : "Sign Out All Others"}
           </Button>
         )
       }
@@ -73,7 +73,7 @@ function SessionRow({ session, disabled }: { session: SessionItem; disabled: boo
           <span className="truncate">{label}</span>
           {session.current && (
             <Badge variant="outline" className="border-primary/30 text-primary">
-              This device
+              This Device
             </Badge>
           )}
         </div>
@@ -84,7 +84,7 @@ function SessionRow({ session, disabled }: { session: SessionItem; disabled: boo
       </div>
       {!session.current && (
         <Button variant="outline" size="sm" disabled={disabled || pending} onClick={signOut}>
-          {pending ? "Signing out…" : "Sign out"}
+          {pending ? "Signing out…" : "Sign Out"}
         </Button>
       )}
     </div>

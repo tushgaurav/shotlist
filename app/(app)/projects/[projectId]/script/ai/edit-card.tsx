@@ -30,12 +30,12 @@ const LINE_CLASSES: Record<ScreenplayElement["type"], string> = {
 function placementLabel(part: EditPart) {
   const input = part.input;
   if (!input?.placement) return "Edit";
-  if (input.placement === "atCursor") return "Insert at your cursor";
-  const scene = typeof input.sceneNumber === "number" ? `scene ${input.sceneNumber}` : "a scene";
+  if (input.placement === "atCursor") return "Insert at Your Cursor";
+  const scene = typeof input.sceneNumber === "number" ? `Scene ${input.sceneNumber}` : "a Scene";
   return input.placement === "replaceScene" ? `Rewrite ${scene}` : `Add after ${scene}`;
 }
 
-/** A change the assistant proposed. "Review in script" shows it in place, to accept or discard. */
+/** A change the assistant proposed. "Review in Script" shows it in place, to accept or discard. */
 export function EditCard({
   part,
   editor,
@@ -109,7 +109,7 @@ export function EditCard({
               className="mt-2 flex items-center gap-1 font-sans text-xs text-muted-foreground hover:text-foreground"
             >
               <ChevronDownIcon className={cn("size-3 transition-transform", expanded && "rotate-180")} />
-              {expanded ? "Show less" : `Show ${elements.length - PREVIEW_LINES} more line${elements.length - PREVIEW_LINES === 1 ? "" : "s"}`}
+              {expanded ? "Show Less" : `Show ${elements.length - PREVIEW_LINES} More Line${elements.length - PREVIEW_LINES === 1 ? "" : "s"}`}
             </button>
           )}
         </div>
@@ -121,7 +121,7 @@ export function EditCard({
         !writing && (
           <div className="flex items-center justify-end gap-2 border-t px-2 py-1.5">
             <Button size="xs" disabled={writer.busy || elements.length === 0} onClick={review}>
-              Review in script
+              Review in Script
             </Button>
           </div>
         )

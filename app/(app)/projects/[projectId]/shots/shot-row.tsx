@@ -225,7 +225,7 @@ export function ShotRowMenu({
   const isMac = useIsMac();
   // The menu traps focus while open, so a shot added from it is focused once it closes.
   const added = useRef<string | null>(null);
-  const [earlier, later] = layout === "rows" ? ["Move up", "Move down"] : ["Move earlier", "Move later"];
+  const [earlier, later] = layout === "rows" ? ["Move Up", "Move Down"] : ["Move Earlier", "Move Later"];
 
   return (
     <DropdownMenu>
@@ -248,7 +248,7 @@ export function ShotRowMenu({
           <>
             <DropdownMenuItem onSelect={() => (added.current = actions.addAfter(shot.id))}>
               <PlusIcon />
-              Insert shot below
+              Insert Shot Below
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => (added.current = actions.duplicate(shot.id))}>
               <CopyIcon />
@@ -270,7 +270,7 @@ export function ShotRowMenu({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <CornerDownRightIcon />
-            Move to
+            Move To
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
             <MoveTargets shot={shot} />
@@ -304,12 +304,12 @@ function MoveTargets({ shot }: { shot: ShotRecord }) {
             <span className="w-6 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
               {scene.number}
             </span>
-            <span className="truncate font-mono text-xs uppercase">{scene.heading || "Untitled scene"}</span>
+            <span className="truncate font-mono text-xs uppercase">{scene.heading || "Untitled Scene"}</span>
           </DropdownMenuItem>
         ))}
       {scenes.some((scene) => !scene.removed) && <DropdownMenuSeparator />}
       <DropdownMenuItem disabled={shot.sceneId === null} onSelect={() => moveTo(shot.id, null)}>
-        Standalone shots
+        Standalone Shots
       </DropdownMenuItem>
     </>
   );

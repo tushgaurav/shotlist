@@ -99,7 +99,7 @@ export function CoverField({
   const dropping = enabled && drop.over;
 
   return (
-    <section aria-label="Header image" {...drop.props}>
+    <section aria-label="Header Image" {...drop.props}>
       {picker.input}
       {hasImage ? (
         <ProjectCover
@@ -139,7 +139,7 @@ export function CoverField({
             ) : (
               <ImagePlusIcon data-icon="inline-start" />
             )}
-            {uploading ? "Uploading…" : "Add header image"}
+            {uploading ? "Uploading…" : "Add Header Image"}
           </Button>
           <p className="text-xs text-balance text-muted-foreground">
             {enabled ? "Or drop one here. It's shown on the project card." : IMAGE_ERRORS.unavailable}

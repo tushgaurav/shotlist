@@ -43,7 +43,7 @@ export function RenumberDialog({
     <Dialog open={scene !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Renumber shots in scene {scene?.number}?</DialogTitle>
+          <DialogTitle>Renumber Shots in Scene {scene?.number}?</DialogTitle>
           <DialogDescription>
             Shots get letters A, B, C… in their current order. Slates and notes that use the old
             labels won&apos;t match anymore.
@@ -53,7 +53,7 @@ export function RenumberDialog({
         {changes.length === 0 ? (
           <p className="text-sm text-muted-foreground">The labels already follow the shot order.</p>
         ) : (
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-1 font-mono text-sm" aria-label="Label changes">
+          <ul className="grid grid-cols-2 gap-x-6 gap-y-1 font-mono text-sm" aria-label="Label Changes">
             {changes.slice(0, PREVIEW_LIMIT).map((change) => (
               <li key={change.id} className="flex items-center gap-2">
                 <span className="text-muted-foreground">{change.from}</span>

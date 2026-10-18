@@ -68,44 +68,44 @@ function presets(context: ComposerContext): Item[] {
   const group = "Suggestions";
   if (context.kind === "start") {
     return [
-      { group, icon: PenLineIcon, kind: "continue", label: "Write the opening scene", instruction: "Write the opening scene of this project." },
-      { group, icon: FilmIcon, kind: "draft", label: "Draft the whole script…", instruction: "" },
+      { group, icon: PenLineIcon, kind: "continue", label: "Write the Opening Scene", instruction: "Write the opening scene of this project." },
+      { group, icon: FilmIcon, kind: "draft", label: "Draft the Whole Script…", instruction: "" },
     ];
   }
   if (context.kind === "rewrite") {
     return [
       { group, icon: ScissorsIcon, kind: "rewrite", label: "Tighten", instruction: "Tighten these lines. Cut anything that isn't doing work and keep the meaning." },
-      { group, icon: MessageSquareTextIcon, kind: "rewrite", label: "Punch up the dialogue", instruction: "Punch up the dialogue: sharper, more specific, with more subtext." },
-      { group, icon: EyeIcon, kind: "rewrite", label: "Make it more visual", instruction: "Make the action more visual and cinematic. Show, don't tell." },
-      { group, icon: FlameIcon, kind: "rewrite", label: "Raise the tension", instruction: "Raise the tension and the stakes." },
-      { group, icon: WandSparklesIcon, kind: "rewrite", label: "Fix the formatting", instruction: "Keep the words as they are, but fix the screenplay formatting and element types." },
+      { group, icon: MessageSquareTextIcon, kind: "rewrite", label: "Punch Up the Dialogue", instruction: "Punch up the dialogue: sharper, more specific, with more subtext." },
+      { group, icon: EyeIcon, kind: "rewrite", label: "Make It More Visual", instruction: "Make the action more visual and cinematic. Show, don't tell." },
+      { group, icon: FlameIcon, kind: "rewrite", label: "Raise the Tension", instruction: "Raise the tension and the stakes." },
+      { group, icon: WandSparklesIcon, kind: "rewrite", label: "Fix the Formatting", instruction: "Keep the words as they are, but fix the screenplay formatting and element types." },
     ];
   }
   if (context.element === "sceneHeading" && !context.emptyLine) {
     return [
-      { group, icon: PenLineIcon, kind: "continue", label: "Write this scene", instruction: "Write this scene in full, about a page." },
-      { group, icon: ClapperboardIcon, kind: "nextScene", label: "Write the next scene", instruction: "" },
+      { group, icon: PenLineIcon, kind: "continue", label: "Write This Scene", instruction: "Write this scene in full, about a page." },
+      { group, icon: ClapperboardIcon, kind: "nextScene", label: "Write the Next Scene", instruction: "" },
     ];
   }
   if (context.element === "character" || context.element === "dialogue" || context.element === "parenthetical") {
     return [
-      { group, icon: MessageSquareTextIcon, kind: "continue", label: "Continue the conversation", instruction: "Continue the conversation for a few more exchanges." },
-      { group, icon: SparklesIcon, kind: "continue", label: "Add a reaction", instruction: "Add a short reaction: a beat of action or a line from another character." },
-      { group, icon: ArrowRightIcon, kind: "continue", label: "Write what happens next", instruction: "Write what happens next, about half a page." },
+      { group, icon: MessageSquareTextIcon, kind: "continue", label: "Continue the Conversation", instruction: "Continue the conversation for a few more exchanges." },
+      { group, icon: SparklesIcon, kind: "continue", label: "Add a Reaction", instruction: "Add a short reaction: a beat of action or a line from another character." },
+      { group, icon: ArrowRightIcon, kind: "continue", label: "Write What Happens Next", instruction: "Write what happens next, about half a page." },
     ];
   }
   return [
-    { group, icon: ArrowRightIcon, kind: "continue", label: "Continue the scene", instruction: "Continue the scene for a few beats." },
-    { group, icon: MessageSquareTextIcon, kind: "continue", label: "Add dialogue", instruction: "Bring in dialogue between the characters in the scene." },
-    { group, icon: ScissorsIcon, kind: "continue", label: "End the scene", instruction: "Bring the scene to a strong close." },
-    { group, icon: ClapperboardIcon, kind: "nextScene", label: "Write the next scene", instruction: "" },
+    { group, icon: ArrowRightIcon, kind: "continue", label: "Continue the Scene", instruction: "Continue the scene for a few beats." },
+    { group, icon: MessageSquareTextIcon, kind: "continue", label: "Add Dialogue", instruction: "Bring in dialogue between the characters in the scene." },
+    { group, icon: ScissorsIcon, kind: "continue", label: "End the Scene", instruction: "Bring the scene to a strong close." },
+    { group, icon: ClapperboardIcon, kind: "nextScene", label: "Write the Next Scene", instruction: "" },
   ];
 }
 
 function title(context: ComposerContext) {
-  if (context.kind === "start") return "Start your script";
-  if (context.kind === "rewrite") return `Rewrite ${context.lines === 1 ? "this line" : `these ${context.lines} lines`}`;
-  return context.emptyLine ? "Write here" : "Continue after this line";
+  if (context.kind === "start") return "Start Your Script";
+  if (context.kind === "rewrite") return `Rewrite ${context.lines === 1 ? "This Line" : `These ${context.lines} Lines`}`;
+  return context.emptyLine ? "Write Here" : "Continue after This Line";
 }
 
 function placeholder(context: ComposerContext) {

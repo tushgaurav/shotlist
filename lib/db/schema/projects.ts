@@ -5,7 +5,7 @@ import type { ProjectTypeIcon } from "../../projects";
 import { assets } from "./assets";
 import { user } from "./auth";
 
-/** Each user's own list of project types, e.g. "Short film" or "YouTube video". */
+/** Each user's own list of project types, e.g. "Short Film" or "YouTube Video". */
 export const projectTypes = pgTable(
   "project_types",
   {

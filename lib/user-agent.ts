@@ -35,5 +35,5 @@ export function describeDevice(userAgent: string | null | undefined): Device {
 
 export function deviceLabel({ browser, os }: Device) {
   if (browser && os) return `${browser} on ${os}`;
-  return browser ?? os ?? "Unknown device";
+  return browser ?? os ?? "Unknown Device";
 }

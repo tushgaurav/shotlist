@@ -78,7 +78,7 @@ export function ProjectCardMenu({
           <DropdownMenuItem asChild>
             <Link href={`/projects/${projectId}/details`}>
               <InfoIcon />
-              Edit details
+              Edit Details
             </Link>
           </DropdownMenuItem>
           {archived ? (
@@ -130,7 +130,7 @@ function RenameProjectForm({
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>Rename project</DialogTitle>
+        <DialogTitle>Rename Project</DialogTitle>
       </DialogHeader>
       <Field>
         <FieldLabel htmlFor={inputId} className="sr-only">

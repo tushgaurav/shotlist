@@ -72,7 +72,7 @@ export function ScriptToolbar({
             if (editor && isElementType(value)) setElementType(value)(editor.state, editor.view.dispatch);
           }}
         >
-          <SelectTrigger size="sm" className="w-40" aria-label="Element type">
+          <SelectTrigger size="sm" className="w-40" aria-label="Element Type">
             <SelectValue placeholder="Element">{elementType && ELEMENT_LABELS[elementType]}</SelectValue>
           </SelectTrigger>
           <SelectContent
@@ -133,7 +133,7 @@ export function ScriptToolbar({
             <TooltipContent>Opens in a new tab</TooltipContent>
           </Tooltip>
           <ShortcutsDialog ai={ai.enabled}>
-            <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
+            <Button variant="ghost" size="icon-sm" aria-label="Keyboard Shortcuts">
               <KeyboardIcon />
             </Button>
           </ShortcutsDialog>
@@ -142,7 +142,7 @@ export function ScriptToolbar({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label="Shots for this scene"
+                aria-label="Shots for This Scene"
                 aria-pressed={shotPanelOpen}
                 className="hidden aria-pressed:bg-muted @7xl:inline-flex"
                 onClick={onToggleShotPanel}
@@ -150,7 +150,7 @@ export function ScriptToolbar({
                 <PanelRightIcon />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{shotPanelOpen ? "Hide" : "Show"} shots for this scene</TooltipContent>
+            <TooltipContent>{shotPanelOpen ? "Hide" : "Show"} Shots for This Scene</TooltipContent>
           </Tooltip>
           <AssistantToggle ai={ai} />
         </div>

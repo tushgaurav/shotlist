@@ -89,7 +89,7 @@ export function typeChoiceOf(selection: TypeSelection): ProjectTypeChoice {
 }
 
 /**
- * One of the user's types, no type, or "New type…", which asks for a name and an icon. In a form
+ * One of the user's types, no type, or "New Type…", which asks for a name and an icon. In a form
  * it submits `typeId` ("none", "new" or an ID), `newTypeName` and `newTypeIcon`.
  */
 export function TypeField({
@@ -111,7 +111,7 @@ export function TypeField({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">
-            <span className="text-muted-foreground">No type</span>
+            <span className="text-muted-foreground">No Type</span>
           </SelectItem>
           {types.map((type) => (
             <SelectItem key={type.id} value={type.id}>
@@ -122,7 +122,7 @@ export function TypeField({
           <SelectSeparator />
           <SelectItem value="new">
             <PlusIcon className="text-muted-foreground" />
-            New type…
+            New Type…
           </SelectItem>
         </SelectContent>
       </Select>
@@ -135,8 +135,8 @@ export function TypeField({
           />
           <Input
             name="newTypeName"
-            aria-label="New type name"
-            placeholder="e.g. YouTube video"
+            aria-label="New Type Name"
+            placeholder="e.g. YouTube Video"
             value={value.newName}
             onChange={(event) => onChange({ ...value, newName: event.target.value })}
             maxLength={PROJECT_TYPE_NAME_MAX_LENGTH}

@@ -24,11 +24,11 @@ export default function ProjectNotFound() {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-16 sm:px-6">
         <EmptyState
           icon={SearchXIcon}
-          title="Project not found"
+          title="Project Not Found"
           description="It may have been removed, or it belongs to a different account."
         >
           <Button asChild variant="outline">
-            <Link href="/projects">Back to projects</Link>
+            <Link href="/projects">Back to Projects</Link>
           </Button>
         </EmptyState>
       </main>

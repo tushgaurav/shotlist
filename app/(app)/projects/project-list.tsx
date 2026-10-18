@@ -19,7 +19,7 @@ export async function ProjectList() {
     return (
       <EmptyState
         icon={FolderOpenIcon}
-        title="No projects yet"
+        title="No Projects Yet"
         description="Create a project for your next production. It will hold the script, the shot list and the shooting schedule."
       >
         <NewProjectDialog {...await getNewProjectOptions()} />

@@ -61,16 +61,16 @@ export function PasswordForm() {
                 onCheckedChange={(checked) => setSignOutOthers(checked === true)}
               />
               <Label htmlFor="sign-out-others" className="font-normal">
-                Sign out of other devices
+                Sign Out of Other Devices
               </Label>
             </div>
             <Button type="submit" disabled={pending} className="ml-auto">
-              {pending ? "Changing…" : "Change password"}
+              {pending ? "Changing…" : "Change Password"}
             </Button>
           </>
         }
       >
-        <SettingsRow label="Current password" htmlFor="current-password">
+        <SettingsRow label="Current Password" htmlFor="current-password">
           <Input
             id="current-password"
             name="currentPassword"
@@ -81,7 +81,7 @@ export function PasswordForm() {
           />
         </SettingsRow>
         <SettingsRow
-          label="New password"
+          label="New Password"
           description={`At least ${MIN_PASSWORD_LENGTH} characters.`}
           htmlFor="new-password"
         >
@@ -95,7 +95,7 @@ export function PasswordForm() {
             required
           />
         </SettingsRow>
-        <SettingsRow label="Confirm new password" htmlFor="confirm-password">
+        <SettingsRow label="Confirm New Password" htmlFor="confirm-password">
           <Input
             id="confirm-password"
             name="confirmPassword"

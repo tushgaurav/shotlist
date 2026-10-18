@@ -198,13 +198,13 @@ export function Teleprompter({ projectId, draft }: Props) {
               <Line key={line.block} line={line} />
             ))}
           </ol>
-          {!empty && <p className="prompter-end">End of script</p>}
+          {!empty && <p className="prompter-end">End of Script</p>}
         </div>
       </div>
 
       {empty && (
         <div className="pointer-events-none fixed inset-0 grid place-content-center gap-2 p-6 text-center">
-          <p className="text-xl font-medium">Nothing to read yet</p>
+          <p className="text-xl font-medium">Nothing to Read Yet</p>
           <p className="text-white/60">Write some dialogue in the script, then reload.</p>
         </div>
       )}
@@ -242,7 +242,7 @@ export function Teleprompter({ projectId, draft }: Props) {
           onPointerLeave={() => setHovering(false)}
         >
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/projects/${projectId}/script`} aria-label="Back to script" title="Back to script">
+            <Link href={`/projects/${projectId}/script`} aria-label="Back to Script" title="Back to Script">
               <ArrowLeftIcon />
             </Link>
           </Button>
@@ -250,7 +250,7 @@ export function Teleprompter({ projectId, draft }: Props) {
           <Button
             className="w-24"
             disabled={empty}
-            title="Play or pause (Space)"
+            title="Play or Pause (Space)"
             onMouseDown={keepFocus}
             onClick={toggle}
           >
@@ -269,7 +269,7 @@ export function Teleprompter({ projectId, draft }: Props) {
             >
               <MinusIcon />
             </Button>
-            <span className="w-20 text-center text-sm tabular-nums" title="Words per minute">
+            <span className="w-20 text-center text-sm tabular-nums" title="Words per Minute">
               {speed} wpm
             </span>
             <Button
@@ -286,28 +286,28 @@ export function Teleprompter({ projectId, draft }: Props) {
           </div>
           <Separator orientation="vertical" className="mx-1 data-vertical:h-5 data-vertical:self-auto" />
           <ToolbarSelect
-            aria-label="Jump to scene"
+            aria-label="Jump to Scene"
             value={sceneId ?? ""}
             disabled={script.scenes.length === 0}
             onChange={(event) => autoscroll.jumpToScene(event.target.value || null)}
           >
-            <option value="">Start of script</option>
+            <option value="">Start of Script</option>
             {script.scenes.map((scene) => (
               <option key={scene.id} value={scene.id}>
-                {scene.number}. {scene.heading || "Untitled scene"}
+                {scene.number}. {scene.heading || "Untitled Scene"}
               </option>
             ))}
           </ToolbarSelect>
           {everyone.characters.length > 0 && (
             <ToolbarSelect
-              aria-label="Whose lines to read"
+              aria-label="Whose Lines to Read"
               value={character ?? ""}
               onChange={(event) => setCharacter(event.target.value || null)}
             >
-              <option value="">Everyone’s lines</option>
+              <option value="">Everyone’s Lines</option>
               {everyone.characters.map((name) => (
                 <option key={name} value={name}>
-                  {name}’s lines
+                  {name}’s Lines
                 </option>
               ))}
             </ToolbarSelect>
@@ -316,8 +316,8 @@ export function Teleprompter({ projectId, draft }: Props) {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Reload script"
-            title="Get the latest saved script"
+            aria-label="Reload Script"
+            title="Get the Latest Saved Script"
             disabled={refreshing}
             onMouseDown={keepFocus}
             onClick={reload}
@@ -328,8 +328,8 @@ export function Teleprompter({ projectId, draft }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              aria-label={fullscreen.active ? "Exit full screen" : "Full screen"}
-              title={fullscreen.active ? "Exit full screen (F)" : "Full screen (F)"}
+              aria-label={fullscreen.active ? "Exit Full Screen" : "Full Screen"}
+              title={fullscreen.active ? "Exit Full Screen (F)" : "Full Screen (F)"}
               onMouseDown={keepFocus}
               onClick={fullscreen.toggle}
             >

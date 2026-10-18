@@ -39,12 +39,12 @@ export function ProjectTypeList({ types }: { types: ProjectTypeRow[] }) {
 
   return (
     <SettingsCard
-      title="Project types"
-      description="Group your projects by the kind of work. Add your own, like “YouTube video” or “Podcast”."
+      title="Project Types"
+      description="Group your projects by the kind of work. Add your own, like “YouTube Video” or “Podcast”."
       action={
         <Button variant="outline" size="sm" onClick={() => setEditing("new")}>
           <PlusIcon data-icon="inline-start" />
-          New type
+          New Type
         </Button>
       }
     >
@@ -144,7 +144,7 @@ function ConfirmDelete({ type, onDone }: { type: ProjectTypeRow; onDone: () => v
           </Button>
         </DialogClose>
         <Button variant="destructive" disabled={pending} onClick={onDelete}>
-          {pending ? "Deleting…" : "Delete type"}
+          {pending ? "Deleting…" : "Delete Type"}
         </Button>
       </DialogFooter>
     </>
@@ -175,7 +175,7 @@ function ProjectTypeForm({ type, onDone }: { type: ProjectTypeRow | null; onDone
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>{type ? "Edit type" : "New type"}</DialogTitle>
+        <DialogTitle>{type ? "Edit Type" : "New Type"}</DialogTitle>
       </DialogHeader>
       <Field>
         <FieldLabel htmlFor="project-type-name">Name</FieldLabel>
@@ -185,7 +185,7 @@ function ProjectTypeForm({ type, onDone }: { type: ProjectTypeRow | null; onDone
             id="project-type-name"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            placeholder="e.g. YouTube video"
+            placeholder="e.g. YouTube Video"
             maxLength={PROJECT_TYPE_NAME_MAX_LENGTH}
             autoComplete="off"
             required
@@ -201,7 +201,7 @@ function ProjectTypeForm({ type, onDone }: { type: ProjectTypeRow | null; onDone
           </Button>
         </DialogClose>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : type ? "Save" : "Add type"}
+          {pending ? "Saving…" : type ? "Save" : "Add Type"}
         </Button>
       </DialogFooter>
     </form>

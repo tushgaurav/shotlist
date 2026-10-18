@@ -60,7 +60,7 @@ export function NavUser({ name, email, image }: { name: string; email: string; i
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              aria-label="Account menu"
+              aria-label="Account Menu"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               {identity}
@@ -80,7 +80,7 @@ export function NavUser({ name, email, image }: { name: string; email: string; i
             <DropdownMenuItem asChild>
               <Link href="/settings/profile" onClick={() => setOpenMobile(false)}>
                 <SettingsIcon />
-                Account settings
+                Account Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSub>
@@ -108,7 +108,7 @@ export function NavUser({ name, email, image }: { name: string; email: string; i
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={signOut}>
               <LogOutIcon />
-              Sign out
+              Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

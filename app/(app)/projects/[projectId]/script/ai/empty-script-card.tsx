@@ -51,11 +51,11 @@ export function EmptyScriptCard({
         <div className="mt-3 flex flex-wrap gap-2">
           <Button size="sm" onClick={onDraft}>
             <FilmIcon data-icon="inline-start" />
-            Draft from details…
+            Draft from Details…
           </Button>
           <Button size="sm" variant="outline" onClick={onCompose}>
             <PenLineIcon data-icon="inline-start" />
-            Write the opening
+            Write the Opening
             <Kbd className="ml-1">{shortcutLabel(["Mod", "K"], isMac)}</Kbd>
           </Button>
         </div>

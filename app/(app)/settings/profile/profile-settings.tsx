@@ -70,13 +70,13 @@ export function ProfileSettings({
         <>
           <FieldError className="mr-auto">{error}</FieldError>
           <Button type="submit" form={NAME_FORM_ID} disabled={!dirty || saving} className="ml-auto">
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? "Saving…" : "Save Changes"}
           </Button>
         </>
       }
     >
       <PhotoRow name={name} image={image} enabled={photosEnabled} />
-      <SettingsRow label="Full name" description="Shown in the sidebar." htmlFor="profile-name-input">
+      <SettingsRow label="Full Name" description="Shown in the sidebar." htmlFor="profile-name-input">
         <form id={NAME_FORM_ID} onSubmit={onSubmit}>
           <Input
             id="profile-name-input"
@@ -90,7 +90,7 @@ export function ProfileSettings({
           />
         </form>
       </SettingsRow>
-      <SettingsRow label="Email address" description="Used to sign in.">
+      <SettingsRow label="Email Address" description="Used to sign in.">
         <div className="flex items-center gap-2">
           <div className="flex h-8 min-w-0 flex-1 items-center rounded-lg border border-input bg-input/20 px-2.5 text-sm dark:bg-input/30">
             <span className="truncate">{email}</span>
@@ -167,7 +167,7 @@ function PhotoRow({ name, image, enabled }: { name: string; image: string | null
 
   return (
     <SettingsRow
-      label="Profile photo"
+      label="Profile Photo"
       description={enabled ? "Shown next to your name. Cropped to a square." : IMAGE_ERRORS.unavailable}
     >
       <div className="flex items-center gap-3">
@@ -251,7 +251,7 @@ function ChangeEmailForm({ email, onDone }: { email: string; onDone: () => void 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>Change email address</DialogTitle>
+        <DialogTitle>Change Email Address</DialogTitle>
         <DialogDescription>
           You sign in with <span className="font-medium text-foreground">{email}</span> now. Enter your
           password to switch to a new address.
@@ -259,11 +259,11 @@ function ChangeEmailForm({ email, onDone }: { email: string; onDone: () => void 
       </DialogHeader>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="new-email">New email</FieldLabel>
+          <FieldLabel htmlFor="new-email">New Email</FieldLabel>
           <Input id="new-email" name="email" type="email" autoComplete="email" required autoFocus />
         </Field>
         <Field>
-          <FieldLabel htmlFor="email-password">Current password</FieldLabel>
+          <FieldLabel htmlFor="email-password">Current Password</FieldLabel>
           <Input
             id="email-password"
             name="password"
@@ -282,7 +282,7 @@ function ChangeEmailForm({ email, onDone }: { email: string; onDone: () => void 
           </Button>
         </DialogClose>
         <Button type="submit" disabled={pending}>
-          {pending ? "Changing…" : "Change email"}
+          {pending ? "Changing…" : "Change Email"}
         </Button>
       </DialogFooter>
     </form>

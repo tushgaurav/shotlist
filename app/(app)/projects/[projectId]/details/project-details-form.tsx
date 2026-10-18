@@ -151,7 +151,7 @@ export function ProjectDetailsForm({ project, types }: { project: SavedProject; 
           <PresetCombobox {...preset("genre")} options={PROJECT_GENRES} multiple placeholder="e.g. Drama, Thriller" />
         </SettingsRow>
         <SettingsRow
-          label="Tone and style"
+          label="Tone and Style"
           htmlFor="project-tone"
           description="How it should feel, and any references."
         >
@@ -160,7 +160,7 @@ export function ProjectDetailsForm({ project, types }: { project: SavedProject; 
       </SettingsCard>
 
       <SettingsCard title="Format" description="How long it runs, how it's framed and the language it's in.">
-        <SettingsRow label="Target runtime" htmlFor="project-runtime" description="In minutes.">
+        <SettingsRow label="Target Runtime" htmlFor="project-runtime" description="In minutes.">
           <div className="relative">
             <Input
               id="project-runtime"
@@ -180,7 +180,7 @@ export function ProjectDetailsForm({ project, types }: { project: SavedProject; 
             </span>
           </div>
         </SettingsRow>
-        <SettingsRow label="Aspect ratio" htmlFor="project-aspectRatio">
+        <SettingsRow label="Aspect Ratio" htmlFor="project-aspectRatio">
           <PresetCombobox {...preset("aspectRatio")} options={PROJECT_ASPECT_RATIOS} placeholder="e.g. 16:9" />
         </SettingsRow>
         <SettingsRow label="Language" htmlFor="project-language">
@@ -192,7 +192,7 @@ export function ProjectDetailsForm({ project, types }: { project: SavedProject; 
         {error ? (
           <FieldError className="mr-auto">{error}</FieldError>
         ) : (
-          dirty && <p className="mr-auto text-sm text-muted-foreground">Unsaved changes</p>
+          dirty && <p className="mr-auto text-sm text-muted-foreground">Unsaved Changes</p>
         )}
         <Button
           type="button"
@@ -206,7 +206,7 @@ export function ProjectDetailsForm({ project, types }: { project: SavedProject; 
           Discard
         </Button>
         <Button type="submit" disabled={!dirty || saving}>
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? "Saving…" : "Save Changes"}
         </Button>
       </div>
     </form>

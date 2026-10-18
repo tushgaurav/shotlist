@@ -99,7 +99,7 @@ export function ShotListToolbar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Show columns</DropdownMenuLabel>
+                <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
                 {SHOT_COLUMNS.map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.field}
@@ -111,7 +111,7 @@ export function ShotListToolbar({
                   </DropdownMenuCheckboxItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={visibility.reset}>Reset to default</DropdownMenuItem>
+                <DropdownMenuItem onSelect={visibility.reset}>Reset to Default</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -151,12 +151,12 @@ function ShortcutsPopover({ view }: { view: ShotListView }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
+        <Button variant="ghost" size="icon-sm" aria-label="Keyboard Shortcuts">
           <KeyboardIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">
-        <p className="font-medium">Keyboard shortcuts</p>
+        <p className="font-medium">Keyboard Shortcuts</p>
         <dl className="grid gap-2 text-sm">
           {SHORTCUTS[view].map(([action, combos]) => (
             <div key={action} className="flex items-center justify-between gap-4">
