@@ -155,8 +155,8 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
   }, [editor, status, writer.busy, ai.enabled]);
 
   const assistantOpen = useLocalStorage(ASSISTANT_KEY) === "open" && ai.enabled;
-  const roomBesidePage = useMinWidth(workspace, 80);
-  const assistantDocked = assistantOpen && roomBesidePage;
+  // Narrower than this, the page would be too cramped beside the assistant.
+  const roomBesidePage = useMinWidth(workspace, 52);
   const setAssistantOpen = useCallback((open: boolean) => writeLocalStorage(ASSISTANT_KEY, open ? "open" : null), []);
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
 
   // The assistant and the shots share the space beside the page.
   const toggleShotPanel = () => {
-    if (!assistantDocked) return shotPanel.toggle();
+    if (!assistantOpen) return shotPanel.toggle();
     setAssistantOpen(false);
     if (!shotPanel.open) shotPanel.toggle();
   };
@@ -216,7 +216,7 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
           projectTitle={projectTitle}
           titlePage={titlePage}
           onTitlePageSaved={setTitlePage}
-          shotPanelOpen={shotPanel.open && !assistantDocked}
+          shotPanelOpen={shotPanel.open && !assistantOpen}
           onToggleShotPanel={toggleShotPanel}
           onOpenTeleprompter={openTeleprompter}
           ai={{
@@ -230,9 +230,14 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
         />
         {status === "conflict" && <ConflictBanner />}
       </div>
-      <div className="flex flex-1">
-        <SceneSidebar key={`scenes-${editorKey}`} editor={editor} shots={projectShots.store} />
-        <div className="min-w-0 flex-1 bg-muted/60 px-3 py-6 sm:px-8 sm:py-10">
+      <div className="relative flex flex-1">
+        <SceneSidebar
+          key={`scenes-${editorKey}`}
+          editor={editor}
+          shots={projectShots.store}
+          className={assistantOpen ? "hidden @min-[88rem]:flex" : undefined}
+        />
+        <div className="@container/page min-w-0 flex-1 bg-muted/60 px-3 py-6 sm:px-8 sm:py-10">
           <div className="screenplay-page relative">
             {editor ? <EditorContent editor={editor} /> : <PageSkeleton />}
             {editor && ai.enabled && status !== "conflict" && (
@@ -248,7 +253,7 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
           imagesEnabled={imagesEnabled}
           saver={saver}
           onClose={shotPanel.toggle}
-          className={assistantDocked ? "hidden" : shotPanel.className}
+          className={assistantOpen ? "hidden" : shotPanel.className}
         />
         {editor && assistantOpen && (
           <AssistantPanel

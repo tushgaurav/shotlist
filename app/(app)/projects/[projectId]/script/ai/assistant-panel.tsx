@@ -9,7 +9,6 @@ import { Streamdown } from "streamdown";
 import "streamdown/styles.css";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AssistantMessage } from "@/lib/ai/chat";
 import type { ScriptSnapshot } from "@/lib/ai/schema";
@@ -30,29 +29,32 @@ type ChatProps = {
   projectId: string;
   details: string[];
   onClose: () => void;
-  /** Called after an edit is shown in the script, e.g. to get the sheet out of the way. */
+  /** Called after an edit is shown in the script, e.g. to uncover the page. */
   onReviewed?: () => void;
 };
 
-/** Docked beside the page when there's room, otherwise a sheet over it. */
+/**
+ * A sidebar beside the page, so the script stays usable while it's open. Where the page
+ * wouldn't fit beside it, it covers the page instead; the toolbar and app stay usable.
+ * Its parent must be positioned.
+ */
 export function AssistantPanel({ docked, ...props }: ChatProps & { docked: boolean }) {
   if (docked) {
     return (
       <aside
         aria-label="Assistant"
-        className="sticky top-24 flex h-[calc(100svh-6rem)] w-96 shrink-0 flex-col border-l bg-background"
+        className="sticky top-24 flex h-[calc(100svh-6rem)] w-80 shrink-0 flex-col border-l bg-background @7xl:w-96"
       >
         <AssistantChat {...props} />
       </aside>
     );
   }
   return (
-    <Sheet open onOpenChange={(open) => !open && props.onClose()}>
-      <SheetContent side="right" showCloseButton={false} className="w-full gap-0 p-0 sm:max-w-md">
-        <SheetTitle className="sr-only">Assistant</SheetTitle>
+    <aside aria-label="Assistant" className="absolute inset-0 z-20 bg-background">
+      <div className="sticky top-24 flex h-[calc(100svh-6rem)] flex-col">
         <AssistantChat {...props} onReviewed={props.onClose} />
-      </SheetContent>
-    </Sheet>
+      </div>
+    </aside>
   );
 }
 
