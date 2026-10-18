@@ -1,22 +1,11 @@
 "use client";
 
-import {
-  CheckIcon,
-  ChevronsUpDownIcon,
-  FilmIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  LayoutGridIcon,
-  MegaphoneIcon,
-  MusicIcon,
-  PlusIcon,
-  ProjectorIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { CheckIcon, ChevronsUpDownIcon, FolderOpenIcon, LayoutGridIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { TypeIcon } from "@/components/project-type-icon";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,20 +19,12 @@ import { Kbd } from "@/components/ui/kbd";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { shortcutLabel, useIsMac } from "@/lib/keyboard";
-import type { ProjectKind } from "@/lib/projects";
+import type { ProjectTypeIcon } from "@/lib/projects";
 
 import { PROJECT_SECTIONS } from "./projects/[projectId]/sections";
-import { NewProjectDialog } from "./projects/new-project-dialog";
+import { NewProjectDialog, type NewProjectOptions } from "./projects/new-project-dialog";
 
-export type SwitcherProject = { id: string; title: string; kind: ProjectKind; archived: boolean };
-
-const KIND_ICONS: Record<ProjectKind, LucideIcon> = {
-  short: FilmIcon,
-  feature: ProjectorIcon,
-  commercial: MegaphoneIcon,
-  music_video: MusicIcon,
-  other: FolderIcon,
-};
+export type SwitcherProject = { id: string; title: string; icon: ProjectTypeIcon | null; archived: boolean };
 
 export function SidebarToggle() {
   const isMac = useIsMac();
@@ -61,7 +42,13 @@ export function SidebarToggle() {
 }
 
 /** Opens another project at the section you're already on. */
-export function ProjectSwitcher({ projects }: { projects: SwitcherProject[] }) {
+export function ProjectSwitcher({
+  projects,
+  newProject,
+}: {
+  projects: SwitcherProject[];
+  newProject: NewProjectOptions;
+}) {
   const { projectId } = useParams<{ projectId?: string }>();
   const pathname = usePathname();
   // Tied to the path so the dialog closes once the new project's page opens.
@@ -71,7 +58,6 @@ export function ProjectSwitcher({ projects }: { projects: SwitcherProject[] }) {
   const segment = pathname.split("/")[3];
   const section = PROJECT_SECTIONS.find((item) => item.segment === segment) ?? PROJECT_SECTIONS[0];
   const listed = projects.filter((project) => !project.archived || project === current);
-  const CurrentIcon = current ? KIND_ICONS[current.kind] : FolderOpenIcon;
 
   return (
     <>
@@ -84,7 +70,11 @@ export function ProjectSwitcher({ projects }: { projects: SwitcherProject[] }) {
             className="max-w-48 sm:max-w-72"
             aria-label={current ? `Switch project, current: ${current.title}` : "Select a project"}
           >
-            <CurrentIcon data-icon="inline-start" className="text-muted-foreground" />
+            {current ? (
+              <TypeIcon icon={current.icon} data-icon="inline-start" className="text-muted-foreground" />
+            ) : (
+              <FolderOpenIcon data-icon="inline-start" className="text-muted-foreground" />
+            )}
             <span className="truncate">{current?.title ?? "Select project"}</span>
             <ChevronsUpDownIcon data-icon="inline-end" className="text-muted-foreground" />
           </Button>
@@ -94,7 +84,6 @@ export function ProjectSwitcher({ projects }: { projects: SwitcherProject[] }) {
             <>
               <DropdownMenuLabel>Projects</DropdownMenuLabel>
               {listed.map((project) => {
-                const Icon = KIND_ICONS[project.kind];
                 const isCurrent = project === current;
                 return (
                   <DropdownMenuItem key={project.id} asChild>
@@ -102,7 +91,7 @@ export function ProjectSwitcher({ projects }: { projects: SwitcherProject[] }) {
                       href={`/projects/${project.id}/${section.segment}`}
                       aria-current={isCurrent ? "page" : undefined}
                     >
-                      <Icon />
+                      <TypeIcon icon={project.icon} />
                       <span className="truncate">{project.title}</span>
                       {isCurrent && <CheckIcon className="ml-auto" />}
                     </Link>
@@ -125,6 +114,7 @@ export function ProjectSwitcher({ projects }: { projects: SwitcherProject[] }) {
         </DropdownMenuContent>
       </DropdownMenu>
       <NewProjectDialog
+        {...newProject}
         open={creatingOn === pathname}
         onOpenChange={(open) => setCreatingOn(open ? pathname : null)}
       />

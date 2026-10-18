@@ -16,6 +16,13 @@ import {
   type ChangeEmailResult,
   type ChangePasswordResult,
 } from "@/lib/dal/account";
+import {
+  createProjectType,
+  deleteProjectType,
+  updateProjectType,
+  type ProjectTypeResult,
+} from "@/lib/dal/project-types";
+import { PROJECT_TYPE_ICONS, PROJECT_TYPE_NAME_MAX_LENGTH, type ProjectTypeIcon } from "@/lib/projects";
 import { IMAGE_TYPES, type ImageType } from "@/lib/shots/images";
 import { SHOT_ID_PATTERN } from "@/lib/shots/types";
 
@@ -116,5 +123,45 @@ export async function revokeSessionAction(id: string) {
 
 export async function revokeOtherSessionsAction() {
   await revokeOtherSessions();
+  refresh();
+}
+
+const typeId = z.string().min(1).max(64);
+
+const projectTypeInput = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Give the type a name.")
+    .max(PROJECT_TYPE_NAME_MAX_LENGTH, `Keep the name under ${PROJECT_TYPE_NAME_MAX_LENGTH} characters.`),
+  icon: z.enum(PROJECT_TYPE_ICONS),
+});
+
+type ProjectTypeInput = { name: string; icon: ProjectTypeIcon };
+
+function projectTypeError(result: ProjectTypeResult, name: string): SettingsFormState {
+  return result.ok ? {} : { error: `You already have a type called “${name}”.` };
+}
+
+export async function createProjectTypeAction(input: ProjectTypeInput): Promise<SettingsFormState> {
+  const parsed = projectTypeInput.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const result = await createProjectType(parsed.data);
+  if (result.ok) refresh();
+  return projectTypeError(result, parsed.data.name);
+}
+
+export async function updateProjectTypeAction(id: string, input: ProjectTypeInput): Promise<SettingsFormState> {
+  const parsed = projectTypeInput.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const result = await updateProjectType(typeId.parse(id), parsed.data);
+  if (result.ok) refresh();
+  return projectTypeError(result, parsed.data.name);
+}
+
+export async function deleteProjectTypeAction(id: string) {
+  await deleteProjectType(typeId.parse(id));
   refresh();
 }

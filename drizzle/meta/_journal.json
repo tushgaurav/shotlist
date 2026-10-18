@@ -29,6 +29,20 @@
       "when": 1792255301698,
       "tag": "0003_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792297106750,
+      "tag": "0004_project_types_and_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792297126523,
+      "tag": "0005_drop_project_kind",
+      "breakpoints": true
     }
   ]
 }

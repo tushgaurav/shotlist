@@ -3,9 +3,10 @@ import { Suspense } from "react";
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getNewProjectOptions } from "@/lib/dal/project-types";
 
 import { AppHeader } from "../app-header";
-import { NewProjectDialog } from "./new-project-dialog";
+import { NewProjectButton, NewProjectDialog } from "./new-project-dialog";
 import { ProjectList } from "./project-list";
 
 export const metadata: Metadata = { title: "Projects" };
@@ -30,7 +31,9 @@ export default function ProjectsPage() {
               Each project holds one script and its shot list.
             </p>
           </div>
-          <NewProjectDialog />
+          <Suspense fallback={<NewProjectButton disabled />}>
+            <NewProjectDialogLoader />
+          </Suspense>
         </div>
         <Suspense fallback={<ProjectGridSkeleton />}>
           <ProjectList />
@@ -40,11 +43,21 @@ export default function ProjectsPage() {
   );
 }
 
+async function NewProjectDialogLoader() {
+  return <NewProjectDialog {...await getNewProjectOptions()} />;
+}
+
 function ProjectGridSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }, (_, i) => (
-        <Skeleton key={i} className="h-32 rounded-xl" />
+        <div key={i} className="overflow-hidden rounded-xl border">
+          <Skeleton className="aspect-video rounded-none" />
+          <div className="flex flex-col gap-4 p-4">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
       ))}
     </div>
   );

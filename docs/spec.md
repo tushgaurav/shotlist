@@ -33,6 +33,8 @@ Built for one user first. Structured so it can become a multi-user product later
 | Term | Meaning |
 | --- | --- |
 | Project | One production (short, music video, commercial, feature). Has one script and one shot list. |
+| Project type | A label for the kind of project, with an icon. Each user has their own list ("Short film", "YouTube video"…), seeded with four defaults at sign-up. |
+| Details | A project's optional metadata: logline, synopsis, genre, tone, target runtime, aspect ratio, language, and a header image. Meant as context for future features such as AI script generation. |
 | Script | The screenplay. Has one **working draft** (what you edit, autosaved) and many **versions**. |
 | Version | An immutable, named snapshot of the script, e.g. "Draft 2" or "Shooting Script". |
 | Scene | A section of the script that starts with a scene heading (`INT. KITCHEN - NIGHT`). Has a permanent ID. |
@@ -123,10 +125,25 @@ projects
   id                  text pk
   owner_id            text → user.id
   title               text
-  kind                text        -- short | feature | commercial | music_video | other
+  type_id             text → project_types.id, null  -- one of the owner's types; cleared if the type is deleted
+  logline             text null
+  synopsis            text null
+  genre               text null   -- presets, comma-separated, custom allowed
+  tone                text null   -- tone, style and references
+  target_runtime_minutes integer null
+  aspect_ratio        text null   -- e.g. 2.39:1, 9:16
+  language            text null
+  cover_image_id      text → assets.id, null       -- header image; cleared if the asset row is deleted
   created_at          timestamptz
   updated_at          timestamptz -- also set by every shot change; the shot list's version stamp
   archived_at         timestamptz null
+
+project_types                       -- each user's own list
+  id                  text pk
+  owner_id            text → user.id
+  name                text        -- unique per owner, ignoring case
+  icon                text        -- key from a fixed icon set, e.g. film, video, megaphone
+  created_at          timestamptz
 
 scripts                             -- one per project in v1 (unique project_id)
   id                  text pk
@@ -223,6 +240,8 @@ assets                              -- uploaded images; the files live in S3
   byte_size           integer     -- both copies together
   created_at          timestamptz
 ```
+
+Project types are rows rather than presets so they can be renamed, given an icon, and counted. New types can be added in the new-project dialog, on the Details page, or in Settings › Project types. The new-project dialog preselects the type used most recently. Deleting a type leaves its projects without one. The header image is an ordinary project asset, uploaded the same way as shot images, and the project cards show its thumbnail.
 
 A scene shows a **"scene changed"** badge in the shot list when it has shots and `content_hash ≠ shots_reviewed_hash`. Adding, editing or moving that scene's shots, or clicking "Mark reviewed", sets `shots_reviewed_hash` to the current `content_hash`.
 
@@ -341,12 +360,14 @@ PDF in table or storyboard layout — whole project, per scene, or per shoot day
 app/
   (auth)/sign-in/page.tsx
   (app)/projects/page.tsx                              project list
-  (app)/projects/[projectId]/layout.tsx                project nav: Script · Shots · Schedule
+  (app)/projects/[projectId]/layout.tsx                project nav: Script · Shots · Schedule · Details
   (app)/projects/[projectId]/script/page.tsx           editor
   (app)/projects/[projectId]/script/versions/page.tsx  history and compare (?a=&b=)
   (app)/projects/[projectId]/shots/page.tsx            table or storyboard
   (app)/projects/[projectId]/schedule/page.tsx         shoot-day planning
   (app)/projects/[projectId]/schedule/[dayId]/page.tsx on-set view
+  (app)/projects/[projectId]/details/page.tsx          header image, title, type, story and format details
+  (app)/settings/project-types/page.tsx                add, rename, re-icon and delete project types
   api/auth/[...all]/route.ts                           Better Auth
   api/scripts/[scriptId]/draft/route.ts                autosave
   api/assets/[assetId]/[variant]/route.ts              image redirect to S3 (owner only)

@@ -26,7 +26,7 @@ export default function SettingsLayout({ children }: LayoutProps<"/settings">) {
         <div className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight">Account settings</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your profile, password and the devices you&apos;re signed in on.
+            Your profile, password, signed-in devices and project types.
           </p>
         </div>
         <div className="flex flex-col gap-6 @3xl:flex-row @3xl:items-start @3xl:gap-10">

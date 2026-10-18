@@ -1,6 +1,7 @@
 "use client";
 
-import { ArchiveIcon, ArchiveRestoreIcon, EllipsisIcon, PencilIcon } from "lucide-react";
+import { ArchiveIcon, ArchiveRestoreIcon, EllipsisIcon, InfoIcon, PencilIcon } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useId, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -73,6 +74,12 @@ export function ProjectCardMenu({
           <DropdownMenuItem onSelect={() => setRenaming(true)}>
             <PencilIcon />
             Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/projects/${projectId}/details`}>
+              <InfoIcon />
+              Edit details
+            </Link>
           </DropdownMenuItem>
           {archived ? (
             <DropdownMenuItem onSelect={() => setArchived(false)}>

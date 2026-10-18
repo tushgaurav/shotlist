@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getNewProjectOptions } from "@/lib/dal/project-types";
 import { listProjects } from "@/lib/dal/projects";
 
 import { ProjectSwitcher, SidebarToggle } from "./header-controls";
@@ -21,15 +22,16 @@ export function AppHeader({ children }: { children: React.ReactNode }) {
 }
 
 async function ProjectSwitcherLoader() {
-  const projects = await listProjects();
+  const [projects, newProject] = await Promise.all([listProjects(), getNewProjectOptions()]);
   return (
     <ProjectSwitcher
-      projects={projects.map(({ id, title, kind, archivedAt }) => ({
+      projects={projects.map(({ id, title, type, archivedAt }) => ({
         id,
         title,
-        kind,
+        icon: type?.icon ?? null,
         archived: archivedAt !== null,
       }))}
+      newProject={newProject}
     />
   );
 }

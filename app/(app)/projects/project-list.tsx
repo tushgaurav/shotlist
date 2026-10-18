@@ -3,9 +3,11 @@ import Link from "next/link";
 
 import { EmptyState } from "@/components/empty-state";
 import { FormattedDate } from "@/components/formatted-date";
+import { ProjectCover } from "@/components/project-cover";
+import { TypeIcon } from "@/components/project-type-icon";
 import { Badge } from "@/components/ui/badge";
+import { getNewProjectOptions } from "@/lib/dal/project-types";
 import { listProjects, type ProjectSummary } from "@/lib/dal/projects";
-import { PROJECT_KIND_LABELS } from "@/lib/projects";
 
 import { NewProjectDialog } from "./new-project-dialog";
 import { ProjectCardMenu } from "./project-card-menu";
@@ -20,7 +22,7 @@ export async function ProjectList() {
         title="No projects yet"
         description="Create a project for your next production. It will hold the script, the shot list and the shooting schedule."
       >
-        <NewProjectDialog />
+        <NewProjectDialog {...await getNewProjectOptions()} />
       </EmptyState>
     );
   }
@@ -65,26 +67,41 @@ function ProjectCard({ project }: { project: ProjectSummary }) {
   return (
     <div
       data-archived={archived}
-      className="relative flex min-h-32 flex-col gap-4 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50 data-[archived=true]:bg-muted/40"
+      className="group/card relative flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/20 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50 data-[archived=true]:bg-muted/40"
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-base leading-snug font-medium text-pretty">
-          <Link
-            href={`/projects/${project.id}/script`}
-            className="outline-none after:absolute after:inset-0 after:rounded-xl"
-          >
-            {project.title}
-          </Link>
-        </h3>
-        <ProjectCardMenu projectId={project.id} title={project.title} archived={archived} />
-      </div>
-      <div className="mt-auto flex items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant={archived ? "outline" : "secondary"}>
-          {archived ? "Archived" : PROJECT_KIND_LABELS[project.kind]}
-        </Badge>
-        <span>
-          Updated <FormattedDate value={project.updatedAt.toISOString()} />
-        </span>
+      <ProjectCover
+        coverImageId={project.coverImageId}
+        icon={project.type?.icon}
+        variant="thumb"
+        className="aspect-video border-b group-data-[archived=true]/card:opacity-60 group-data-[archived=true]/card:grayscale"
+      />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base leading-snug font-medium text-pretty">
+            <Link
+              href={`/projects/${project.id}/script`}
+              className="outline-none after:absolute after:inset-0 after:rounded-xl"
+            >
+              {project.title}
+            </Link>
+          </h3>
+          <ProjectCardMenu projectId={project.id} title={project.title} archived={archived} />
+        </div>
+        <div className="mt-auto flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          {archived ? (
+            <Badge variant="outline">Archived</Badge>
+          ) : (
+            project.type && (
+              <Badge variant="secondary" className="min-w-0">
+                <TypeIcon icon={project.type.icon} data-icon="inline-start" />
+                <span className="truncate">{project.type.name}</span>
+              </Badge>
+            )
+          )}
+          <span className="shrink-0">
+            Updated <FormattedDate value={project.updatedAt.toISOString()} />
+          </span>
+        </div>
       </div>
     </div>
   );
