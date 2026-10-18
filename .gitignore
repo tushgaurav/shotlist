@@ -22,7 +22,9 @@
 
 # misc
 .DS_Store
+# Private keys. The RDS bundle is Amazon's public CA, and the app reads it at runtime.
 *.pem
+!certs/rds-global-bundle.pem
 
 # debug
 npm-debug.log*

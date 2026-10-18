@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  // pg opens this CA from DATABASE_URL. Nothing imports it, so the tracer
+  // would otherwise leave it out of the serverless bundle.
+  outputFileTracingIncludes: {
+    "/*": ["./certs/rds-global-bundle.pem"],
+  },
   // The sidebar's account menu sits in the bottom-left corner.
   devIndicators: { position: "bottom-right" },
   async redirects() {
