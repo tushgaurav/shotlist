@@ -1,13 +1,11 @@
-import { ClapperboardIcon } from "lucide-react";
 import Link from "next/link";
+
+import { SidebarWordmark } from "@/app/(app)/sidebar-wordmark";
 
 export function Brand({ href = "/projects" }: { href?: string }) {
   return (
-    <Link href={href} className="flex items-center gap-2 font-semibold tracking-tight">
-      <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-        <ClapperboardIcon className="size-4" />
-      </span>
-      Shotlist
+    <Link href={href} className="rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+      <SidebarWordmark className="h-7" />
     </Link>
   );
 }
