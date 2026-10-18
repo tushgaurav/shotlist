@@ -62,7 +62,7 @@ export function SidebarNav() {
 export function SectionNav({ projectId, pathname }: { projectId?: string | null; pathname?: string }) {
   return (
     <SidebarGroup>
-      <SidebarMenu>
+      <SidebarMenu className="gap-1">
         {PROJECT_SECTIONS.map((section) => {
           const label = (
             <>
