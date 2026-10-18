@@ -1,6 +1,5 @@
 "use client";
 
-import { ClapperboardIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { PROJECT_SECTIONS } from "./projects/[projectId]/sections";
+import { SidebarWordmark } from "./sidebar-wordmark";
 
 /** A link that also closes the sidebar sheet on small screens. */
 function NavLink({ onClick, ...props }: React.ComponentProps<typeof Link>) {
@@ -37,22 +37,14 @@ export function CloseMobileSidebarOnNavigate() {
   return null;
 }
 
-/** The mark is as wide as the collapsed sidebar, so only the wordmark gets clipped. */
+/** At this size the collapsed "sl" is about 16px wide, so the padding centres it in the icon rail. */
 export function SidebarBrand() {
   return (
     <NavLink
       href="/projects"
-      className="flex h-8 min-w-8 items-center gap-2 overflow-hidden rounded-lg ring-sidebar-ring outline-hidden focus-visible:ring-2"
+      className="flex h-8 min-w-8 items-center overflow-hidden rounded-lg px-2 ring-sidebar-ring outline-hidden focus-visible:ring-2"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-        <ClapperboardIcon className="size-4" />
-      </span>
-      {/* The SVG is drawn in white, so it's used as a mask and painted in the theme's color. */}
-      <span
-        role="img"
-        aria-label="Shotlist"
-        className="aspect-73/17 h-4.5 shrink-0 bg-sidebar-foreground mask-[url(/shotlist.svg)] mask-contain mask-no-repeat"
-      />
+      <SidebarWordmark />
     </NavLink>
   );
 }
