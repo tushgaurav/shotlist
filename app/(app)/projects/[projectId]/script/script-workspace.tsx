@@ -117,6 +117,25 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
     if (status === "conflict") editor?.setEditable(false);
   }, [editor, status]);
 
+  // The teleprompter reads the saved draft. The tab opens during the click, before saving,
+  // because pop-up blockers refuse tabs opened later.
+  const openTeleprompter = () => {
+    const url = `/projects/${projectId}/teleprompter`;
+    if (!saver.hasUnsavedChanges) {
+      window.open(url, "_blank");
+      return;
+    }
+    const tab = window.open("", "_blank");
+    void saver.settle().then(() => {
+      if (tab) tab.location.href = url;
+      if (saver.hasUnsavedChanges) {
+        toast.warning("The teleprompter shows the last saved version.", {
+          description: "Some changes haven't saved yet. Reload the teleprompter once they have.",
+        });
+      }
+    });
+  };
+
   // useEditorState keeps its first snapshot when the editor goes from null to ready, so
   // components that read editor state remount once it exists.
   const editorKey = editor ? "ready" : "loading";
@@ -134,6 +153,7 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
           onTitlePageSaved={setTitlePage}
           shotPanelOpen={shotPanel.open}
           onToggleShotPanel={shotPanel.toggle}
+          onOpenTeleprompter={openTeleprompter}
         />
         {status === "conflict" && <ConflictBanner />}
       </div>

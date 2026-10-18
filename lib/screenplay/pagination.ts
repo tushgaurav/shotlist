@@ -148,7 +148,7 @@ function spaceBefore(previous: ElementType | null, type: ElementType) {
   return 1;
 }
 
-function toRuns(nodes: TextJSON[], uppercase: boolean): TextRun[] {
+export function toRuns(nodes: TextJSON[], uppercase: boolean): TextRun[] {
   return nodes.map((node) => {
     const marks = new Set((node.marks ?? []).map((mark) => mark.type));
     return {

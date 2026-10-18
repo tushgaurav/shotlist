@@ -2,7 +2,7 @@
 
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
-import { BoldIcon, ItalicIcon, KeyboardIcon, PanelRightIcon, UnderlineIcon } from "lucide-react";
+import { BoldIcon, ItalicIcon, KeyboardIcon, MonitorPlayIcon, PanelRightIcon, UnderlineIcon } from "lucide-react";
 
 import { SaveStatusIndicator, type SaveTone } from "@/components/save-status";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,17 @@ type Props = {
   onTitlePageSaved: (titlePage: TitlePage) => void;
   shotPanelOpen: boolean;
   onToggleShotPanel: () => void;
+  onOpenTeleprompter: () => void;
 };
 
-export function ScriptToolbar({ editor, status, shotPanelOpen, onToggleShotPanel, ...titlePageProps }: Props) {
+export function ScriptToolbar({
+  editor,
+  status,
+  shotPanelOpen,
+  onToggleShotPanel,
+  onOpenTeleprompter,
+  ...titlePageProps
+}: Props) {
   const isMac = useIsMac();
   const state = useEditorState({
     editor,
@@ -109,6 +117,15 @@ export function ScriptToolbar({ editor, status, shotPanelOpen, onToggleShotPanel
           <Separator orientation="vertical" className="mx-1.5 h-5!" />
           <TitlePageDialog {...titlePageProps} />
           <ExportMenu editor={editor} projectTitle={titlePageProps.projectTitle} titlePage={titlePageProps.titlePage} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={!editor} onClick={onOpenTeleprompter}>
+                <MonitorPlayIcon data-icon="inline-start" />
+                Teleprompter
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Opens in a new tab</TooltipContent>
+          </Tooltip>
           <ShortcutsDialog>
             <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
               <KeyboardIcon />
