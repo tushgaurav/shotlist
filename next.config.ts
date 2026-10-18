@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
         destination: "/projects/:projectId/script",
         permanent: false,
       },
+      { source: "/settings", destination: "/settings/profile", permanent: false },
     ];
   },
   turbopack: {

@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { MIN_PASSWORD_LENGTH } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
-
-const MIN_PASSWORD_LENGTH = 8;
 
 function nextPath() {
   const next = new URLSearchParams(window.location.search).get("next");

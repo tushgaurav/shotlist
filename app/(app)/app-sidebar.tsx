@@ -35,8 +35,8 @@ export function AppSidebar() {
 }
 
 async function NavUserLoader() {
-  const { name, email } = await requireUser();
-  return <NavUser name={name} email={email} />;
+  const { name, email, image } = await requireUser();
+  return <NavUser name={name} email={email} image={image} />;
 }
 
 function NavUserSkeleton() {

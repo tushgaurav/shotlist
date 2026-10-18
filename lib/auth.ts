@@ -12,6 +12,10 @@ export const auth = betterAuth({
     // Set DISABLE_SIGNUP=true once your own account exists, so nobody else can register.
     disableSignUp: process.env.DISABLE_SIGNUP === "true",
   },
+  user: {
+    // No verification emails are sent, so a new address takes effect straight away.
+    changeEmail: { enabled: true, updateEmailWithoutVerification: true },
+  },
   plugins: [nextCookies()],
 });
 
