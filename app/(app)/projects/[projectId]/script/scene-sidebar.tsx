@@ -143,7 +143,7 @@ export function SceneSidebar({
                   draggingId === scene.id && "opacity-50",
                 )}
               >
-                <span className="w-5 shrink-0 text-right text-muted-foreground tabular-nums">
+                <span className="w-5 shrink-0 text-right leading-5 text-muted-foreground tabular-nums">
                   {scene.number}
                 </span>
                 <span className="line-clamp-2 flex-1 font-mono leading-5 tracking-tight">
