@@ -37,7 +37,7 @@ export function CloseMobileSidebarOnNavigate() {
   return null;
 }
 
-/** At this size the collapsed "sl" is about 16px wide, so the padding centres it in the icon rail. */
+/** SidebarWordmark centres its collapsed "s" assuming this padding and size. */
 export function SidebarBrand() {
   return (
     <NavLink
