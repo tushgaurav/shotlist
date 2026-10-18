@@ -92,7 +92,7 @@ export function ScriptToolbar({
           </SelectContent>
         </Select>
 
-        <Separator orientation="vertical" className="mx-1.5 h-5!" />
+        <Separator orientation="vertical" className="mx-1.5 data-vertical:h-5 data-vertical:self-auto" />
 
         {marks.map((mark) => (
           <Tooltip key={mark.name}>
@@ -115,12 +115,12 @@ export function ScriptToolbar({
           </Tooltip>
         ))}
 
-        <Separator orientation="vertical" className="mx-1.5 h-5!" />
+        <Separator orientation="vertical" className="mx-1.5 data-vertical:h-5 data-vertical:self-auto" />
         <AiToolbarControls ai={ai} disabled={!editor || status === "conflict"} />
 
         <div className="ml-auto flex items-center gap-1">
           <SaveStatusIndicator status={status} tone={STATUS_TONES[status]} label={STATUS_LABELS[status]} />
-          <Separator orientation="vertical" className="mx-1.5 h-5!" />
+          <Separator orientation="vertical" className="mx-1.5 data-vertical:h-5 data-vertical:self-auto" />
           <TitlePageDialog {...titlePageProps} />
           <ExportMenu editor={editor} projectTitle={titlePageProps.projectTitle} titlePage={titlePageProps.titlePage} />
           <Tooltip>

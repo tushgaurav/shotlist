@@ -88,7 +88,7 @@ export function ShotListToolbar({
 
         <div className="ml-auto flex items-center gap-1">
           <SaveStatusIndicator status={status} {...STATUS[status]} />
-          <Separator orientation="vertical" className="mx-1.5 h-5!" />
+          <Separator orientation="vertical" className="mx-1.5 data-vertical:h-5 data-vertical:self-auto" />
 
           {view === "table" && (
             <DropdownMenu>

@@ -246,7 +246,7 @@ export function Teleprompter({ projectId, draft }: Props) {
               <ArrowLeftIcon />
             </Link>
           </Button>
-          <Separator orientation="vertical" className="mx-1 h-5!" />
+          <Separator orientation="vertical" className="mx-1 data-vertical:h-5 data-vertical:self-auto" />
           <Button
             className="w-24"
             disabled={empty}
@@ -284,7 +284,7 @@ export function Teleprompter({ projectId, draft }: Props) {
               <PlusIcon />
             </Button>
           </div>
-          <Separator orientation="vertical" className="mx-1 h-5!" />
+          <Separator orientation="vertical" className="mx-1 data-vertical:h-5 data-vertical:self-auto" />
           <ToolbarSelect
             aria-label="Jump to scene"
             value={sceneId ?? ""}
@@ -312,7 +312,7 @@ export function Teleprompter({ projectId, draft }: Props) {
               ))}
             </ToolbarSelect>
           )}
-          <Separator orientation="vertical" className="mx-1 h-5!" />
+          <Separator orientation="vertical" className="mx-1 data-vertical:h-5 data-vertical:self-auto" />
           <Button
             variant="ghost"
             size="icon"
