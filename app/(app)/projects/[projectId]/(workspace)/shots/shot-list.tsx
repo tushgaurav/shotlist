@@ -21,6 +21,7 @@ import { groupShots, sceneChanged, shotListCsv, totalMinutes } from "@/lib/shots
 import { shotLabel } from "@/lib/shots/numbering";
 import type { ShotListData, ShotScene } from "@/lib/shots/types";
 
+import { useWorkspace } from "../workspace";
 import { gridTemplate, useColumnVisibility, useShotListView } from "./columns";
 import { ShotListContext, type DropTarget, type ShotListActions } from "./context";
 import { focusShotCell, handleGridKeyDown } from "./grid-keys";
@@ -37,6 +38,20 @@ const groupSceneId = (groupKey: string) =>
   groupKey.startsWith("scene:") ? groupKey.slice("scene:".length) : null;
 
 type Props = { projectId: string; projectTitle: string; data: ShotListData; imagesEnabled: boolean };
+
+/** The shot list with the data its layout loaded. */
+export function LoadedShotList() {
+  const { projectId, projectTitle, shots, imagesEnabled } = useWorkspace();
+  return (
+    <ShotList
+      key={projectId}
+      projectId={projectId}
+      projectTitle={projectTitle}
+      data={shots}
+      imagesEnabled={imagesEnabled}
+    />
+  );
+}
 
 export function ShotList({ projectId, projectTitle, data, imagesEnabled }: Props) {
   const shots = useProjectShots(projectId, data);

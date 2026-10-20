@@ -13,7 +13,7 @@ import type { ImageUploadError } from "@/lib/shots/image-uploader";
 import { MAX_SOURCE_BYTES, type PreparedImage } from "@/lib/shots/images";
 
 import { confirmCoverUploadAction, removeCoverAction, startCoverUploadAction } from "../../actions";
-import { useImageDrop, useImagePicker } from "../shots/shot-image";
+import { useImageDrop, useImagePicker } from "../(workspace)/shots/shot-image";
 
 async function prepare(file: File): Promise<PreparedImage | ImageUploadError> {
   if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return "not_image";

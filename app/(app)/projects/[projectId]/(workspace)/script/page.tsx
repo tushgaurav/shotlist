@@ -4,14 +4,8 @@ import { Courier_Prime } from "next/font/google";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { filledDetails } from "@/lib/ai/context";
-import { aiEnabled } from "@/lib/ai/provider";
-import { getProject } from "@/lib/dal/projects";
-import { getOrCreateScript } from "@/lib/dal/scripts";
-import { getShotList } from "@/lib/dal/shots";
-import { storageEnabled } from "@/lib/storage/s3";
 
-import { ScriptWorkspace } from "./script-workspace";
+import { LoadedScriptWorkspace } from "./script-workspace";
 
 const courierPrime = Courier_Prime({
   weight: ["400", "700"],
@@ -22,43 +16,15 @@ const courierPrime = Courier_Prime({
 
 export const metadata: Metadata = { title: "Script" };
 
-export default function ScriptPage({ params }: PageProps<"/projects/[projectId]/script">) {
+// The data comes from the (workspace) layout, so there's nothing to wait for here when
+// switching over from the shot list.
+export default function ScriptPage() {
   return (
     <main className={cn("flex flex-1 flex-col", courierPrime.variable)}>
       <Suspense fallback={<ScriptSkeleton />}>
-        <ScriptLoader params={params} />
+        <LoadedScriptWorkspace />
       </Suspense>
     </main>
-  );
-}
-
-async function ScriptLoader({ params }: { params: Promise<{ projectId: string }> }) {
-  const { projectId } = await params;
-  const [project, script, shots] = await Promise.all([
-    getProject(projectId),
-    getOrCreateScript(projectId),
-    getShotList(projectId),
-  ]);
-
-  return (
-    <ScriptWorkspace
-      key={script.id}
-      projectId={projectId}
-      projectTitle={project.title}
-      script={{
-        id: script.id,
-        draft: script.draft,
-        draftRevision: script.draftRevision,
-        titlePage: script.titlePage,
-      }}
-      shots={shots}
-      imagesEnabled={storageEnabled()}
-      ai={{
-        enabled: aiEnabled(),
-        details: filledDetails({ ...project, typeName: project.type?.name ?? null }),
-        targetRuntimeMinutes: project.targetRuntimeMinutes,
-      }}
-    />
   );
 }
 

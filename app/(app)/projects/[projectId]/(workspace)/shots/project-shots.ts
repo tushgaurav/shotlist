@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { newId } from "@/lib/id";
@@ -27,8 +27,16 @@ const SAVE_ERRORS: Record<ShotMutationError | "offline", string> = {
   invalid: "A change couldn't be saved. Reload to see the latest shot list.",
 };
 
+// A Route Handler rather than a Server Action: those go one at a time, so a load would hold
+// up saves.
+async function loadShotList(projectId: string): Promise<ShotListData | null> {
+  const response = await fetch(`/api/projects/${projectId}/shots`, { cache: "no-store" });
+  return response.ok ? ((await response.json()) as ShotListData) : null;
+}
+
 function shotApi(projectId: string): ShotApi {
   return {
+    load: () => loadShotList(projectId),
     create: (input) => createShotAction(projectId, input),
     update: (changes) => updateShotsAction(projectId, changes),
     move: (input) => moveShotAction(projectId, input),
@@ -71,19 +79,28 @@ const loaded = new Map<string, ProjectShots>();
  * be mounted (one hidden), so they share one store and never show each other stale data.
  */
 export function useProjectShots(projectId: string, data: ShotListData): ProjectShots {
-  const [shots] = useState(() => {
+  const [{ shots, fresh }] = useState(() => {
     // Never shared on the server, where one module instance serves every user.
-    if (typeof window === "undefined") return create(projectId, data);
+    if (typeof window === "undefined") return { shots: create(projectId, data), fresh: true };
     let existing = loaded.get(projectId);
-    if (!existing) {
-      existing = create(projectId, data);
-      loaded.set(projectId, existing);
-    }
-    return existing;
+    if (existing) return { shots: existing, fresh: false };
+    existing = create(projectId, data);
+    loaded.set(projectId, existing);
+    return { shots: existing, fresh: true };
   });
 
-  // Pages stay mounted after navigating away, so take fresh data when they're shown again.
+  // The layout's data is new when the pages are entered from elsewhere.
   useEffect(() => shots.store.receive(data), [shots, data]);
+
+  // Pages stay mounted, hidden, after navigating away, and switching between them doesn't wait
+  // for the server. So each time one is shown, catch up in the background with what was saved
+  // elsewhere meanwhile: scenes from the script, other tabs. A store just made has nothing to
+  // catch up on.
+  const skipSync = useRef(fresh);
+  useEffect(() => {
+    if (skipSync.current) skipSync.current = false;
+    else shots.store.sync();
+  }, [shots]);
 
   useEffect(() => {
     const warnIfUnsaved = (event: BeforeUnloadEvent) => {

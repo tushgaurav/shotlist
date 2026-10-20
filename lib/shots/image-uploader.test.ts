@@ -9,6 +9,7 @@ const ok = { ok: true } as const;
 
 function setup() {
   const shotApi: ShotApi = {
+    load: async () => null,
     create: async () => ({ ...ok, suffix: "A" }),
     update: vi.fn<ShotApi["update"]>(async () => ok),
     move: async () => ({ ...ok, suffix: "A" }),

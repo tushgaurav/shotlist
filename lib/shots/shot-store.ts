@@ -38,6 +38,8 @@ export type ShotListState = Omit<ShotListData, "version"> & { status: ShotSaveSt
 type Move = { id: string; sceneId: string | null; position: string };
 
 export type ShotApi = {
+  /** Null when there's nothing to take, e.g. after signing out. */
+  load(): Promise<ShotListData | null>;
   create(input: Move): Promise<ShotMutation<{ suffix: string | null }>>;
   update(changes: { id: string; patch: ShotPatch }[]): Promise<ShotMutation>;
   move(input: Move): Promise<ShotMutation<{ suffix: string | null }>>;
@@ -70,7 +72,9 @@ export class ShotStore {
   private queue: Promise<unknown> = Promise.resolve();
   private busy = 0;
   private failure: "offline" | "error" | null = null;
-  private received: ShotListData;
+  private received = new WeakSet<ShotListData>();
+  private syncing = false;
+  private syncAgain = false;
   /** The newest server version this store has seen, from loaded data or its own saves. */
   private version: number;
   private readonly flushMs: number;
@@ -82,7 +86,7 @@ export class ShotStore {
     data: ShotListData,
     private readonly options: ShotStoreOptions,
   ) {
-    this.received = data;
+    this.received.add(data);
     this.version = data.version;
     this.state = { scenes: data.scenes, shots: data.shots, status: "saved" };
     this.flushMs = options.flushMs ?? 700;
@@ -102,13 +106,14 @@ export class ShotStore {
   }
 
   /**
-   * Takes fresh server data, e.g. when the page is shown again after editing the script.
+   * Takes fresh server data, e.g. after editing the script. Data it already took is ignored:
+   * pages hand back what they were rendered with each time they're shown.
    * Local work wins: shots are only replaced when nothing is waiting to save and the data
    * isn't older than a change this store already saved (it may have been loaded mid-save).
    */
   receive(data: ShotListData) {
-    if (data === this.received) return;
-    this.received = data;
+    if (this.received.has(data)) return;
+    this.received.add(data);
     if (!this.hasUnsavedChanges && data.version >= this.version) {
       this.version = data.version;
       this.set({ scenes: data.scenes, shots: data.shots });
@@ -121,6 +126,35 @@ export class ShotStore {
         return current ? { ...scene, reviewedHash: current.reviewedHash } : scene;
       }),
     });
+  }
+
+  /**
+   * Loads the latest data in the background and takes it in (see receive). Called while a
+   * load is running, it loads again afterwards so nothing saved in between is missed.
+   * A failed load changes nothing; the next one catches up.
+   */
+  sync() {
+    if (this.syncing) {
+      this.syncAgain = true;
+      return;
+    }
+    this.syncing = true;
+    // After the queued requests, so the data includes them.
+    void this.queue
+      .then(() => this.api.load())
+      .then(
+        (data) => {
+          if (data) this.receive(data);
+        },
+        () => {},
+      )
+      .finally(() => {
+        this.syncing = false;
+        if (this.syncAgain) {
+          this.syncAgain = false;
+          this.sync();
+        }
+      });
   }
 
   shotsIn(sceneId: string | null) {

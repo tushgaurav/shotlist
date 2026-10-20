@@ -95,6 +95,26 @@ const unauthorized = { ok: false, error: "unauthorized" } as const;
 const notFound = { ok: false, error: "not_found" } as const;
 const invalid = { ok: false, error: "invalid" } as const;
 
+export type ShotListResult =
+  | { status: "ok"; data: ShotListData }
+  | { status: "unauthorized" }
+  | { status: "not_found" };
+
+/** The shot list, for Route Handlers. */
+export async function loadShotList(projectId: string): Promise<ShotListResult> {
+  const user = await getCurrentUser();
+  if (!user) return { status: "unauthorized" };
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.ownerId, user.id)))
+    .limit(1);
+  if (!project) return { status: "not_found" };
+
+  return { status: "ok", data: await getShotList(projectId) };
+}
+
 /**
  * Runs `work` in a transaction with the project row locked, so label assignment can't race
  * within a project. Returns not_found unless the signed-in user owns the project.

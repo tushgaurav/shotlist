@@ -20,6 +20,7 @@ import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
 import { useMinWidth } from "@/lib/use-min-width";
 
 import { useProjectShots } from "../shots/project-shots";
+import { useWorkspace } from "../workspace";
 import { AssistantPanel } from "./ai/assistant-panel";
 import { Composer, composerSession, type ComposerSession } from "./ai/composer";
 import { DraftDialog } from "./ai/draft-dialog";
@@ -51,6 +52,12 @@ export type ScriptWorkspaceProps = {
   /** Whether OPENROUTER_API_KEY is set, and which project details the AI can use. */
   ai: { enabled: boolean; details: string[]; targetRuntimeMinutes: number | null };
 };
+
+/** The script workspace with the data its layout loaded. */
+export function LoadedScriptWorkspace() {
+  const workspace = useWorkspace();
+  return <ScriptWorkspace key={workspace.script.id} {...workspace} />;
+}
 
 export function ScriptWorkspace({ script, projectId, projectTitle, shots, imagesEnabled, ai }: ScriptWorkspaceProps) {
   const projectShots = useProjectShots(projectId, shots);
@@ -124,9 +131,10 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
-      void saver.flush();
+      // Leaving the page saves what's left. The shot list needs any scenes that adds.
+      if (saver.hasUnsavedChanges) void saver.settle().then(() => projectShots.store.sync());
     };
-  }, [saver]);
+  }, [saver, projectShots]);
 
   useEffect(() => {
     if (status === "conflict") editor?.setEditable(false);

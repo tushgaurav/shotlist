@@ -26,6 +26,7 @@ function fakeApi() {
   const calls: { op: string; args: unknown }[] = [];
   const ok = { ok: true } as const;
   const api = {
+    load: vi.fn<ShotApi["load"]>(async () => (calls.push({ op: "load", args: null }), null)),
     create: vi.fn<ShotApi["create"]>(async (input) => (calls.push({ op: "create", args: input }), { ...ok, suffix: "Q" })),
     update: vi.fn<ShotApi["update"]>(async (changes) => (calls.push({ op: "update", args: changes }), ok)),
     move: vi.fn<ShotApi["move"]>(async (input) => (calls.push({ op: "move", args: input }), { ...ok, suffix: "R" })),
@@ -237,5 +238,55 @@ describe("ShotStore.receive", () => {
 
     store.receive({ ...initial, shots: [], version: 5 });
     expect(store.getSnapshot().shots).toEqual([]);
+  });
+
+  it("ignores data it already took, like a page shown again with what it was rendered with", () => {
+    const { store, initial } = setup();
+    const fresh = { ...initial, scenes: [scene("s1", "1"), scene("s3", "3")], version: 2 };
+    store.receive(fresh);
+    store.receive(initial);
+    expect(store.getSnapshot().scenes.map((s) => s.id)).toEqual(["s1", "s3"]);
+  });
+});
+
+describe("ShotStore.sync", () => {
+  it("loads after the queued requests and takes the result", async () => {
+    const { store, api, calls, initial } = setup();
+    api.load.mockImplementationOnce(async () => {
+      calls.push({ op: "load", args: null });
+      return { ...initial, scenes: [...initial.scenes, scene("s3", "3")], version: 2 };
+    });
+    store.remove("c");
+    store.sync();
+    await vi.runAllTimersAsync();
+
+    expect(calls.map((call) => call.op)).toEqual(["remove", "load"]);
+    expect(store.getSnapshot().scenes.map((s) => s.id)).toEqual(["s1", "s2", "s3"]);
+  });
+
+  it("loads once more when asked again mid-load, and not more", async () => {
+    const { store, api, initial } = setup();
+    let finish!: () => void;
+    api.load.mockImplementationOnce(
+      () => new Promise((resolve) => (finish = () => resolve({ ...initial, version: 2 }))),
+    );
+    store.sync();
+    await vi.advanceTimersByTimeAsync(0);
+    store.sync();
+    store.sync();
+    expect(api.load).toHaveBeenCalledTimes(1);
+
+    finish();
+    await vi.runAllTimersAsync();
+    expect(api.load).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps what's on screen when a load fails", async () => {
+    const { store, api, initial } = setup();
+    api.load.mockRejectedValueOnce(new Error("offline"));
+    store.sync();
+    await vi.runAllTimersAsync();
+    expect(store.getSnapshot().shots).toEqual(initial.shots);
+    expect(store.getSnapshot().status).toBe("saved");
   });
 });

@@ -2,35 +2,20 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProject } from "@/lib/dal/projects";
-import { getShotList } from "@/lib/dal/shots";
-import { storageEnabled } from "@/lib/storage/s3";
 
-import { ShotList } from "./shot-list";
+import { LoadedShotList } from "./shot-list";
 
 export const metadata: Metadata = { title: "Shot List" };
 
-export default function ShotsPage({ params }: PageProps<"/projects/[projectId]/shots">) {
+// The data comes from the (workspace) layout, so there's nothing to wait for here when
+// switching over from the script.
+export default function ShotsPage() {
   return (
     <main className="flex flex-1 flex-col">
       <Suspense fallback={<ShotListSkeleton />}>
-        <ShotListLoader params={params} />
+        <LoadedShotList />
       </Suspense>
     </main>
-  );
-}
-
-async function ShotListLoader({ params }: { params: Promise<{ projectId: string }> }) {
-  const { projectId } = await params;
-  const [project, data] = await Promise.all([getProject(projectId), getShotList(projectId)]);
-  return (
-    <ShotList
-      key={projectId}
-      projectId={projectId}
-      projectTitle={project.title}
-      data={data}
-      imagesEnabled={storageEnabled()}
-    />
   );
 }
 
