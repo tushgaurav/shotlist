@@ -25,9 +25,23 @@ const monaSans = Mona_Sans({
   preload: false,
 });
 
+const description = "Write scripts and plan shot lists for your productions.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://app.shotlist.video"),
   title: { default: "Shotlist", template: "%s · Shotlist" },
-  description: "Write scripts and plan shot lists for your productions.",
+  description,
+  openGraph: {
+    title: "Shotlist",
+    description,
+    siteName: "Shotlist",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shotlist",
+    description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
