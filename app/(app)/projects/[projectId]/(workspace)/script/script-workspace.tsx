@@ -15,10 +15,12 @@ import { committedDoc, getAiSuggestion, isAiSuggestionTransaction } from "@/lib/
 import { screenplayEditorExtensions } from "@/lib/screenplay/editor/extensions";
 import { toFountain } from "@/lib/screenplay/fountain";
 import type { ScreenplayDocJSON, TitlePage } from "@/lib/screenplay/types";
+import type { ShareSettings } from "@/lib/share/types";
 import type { ShotListData } from "@/lib/shots/types";
 import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
 import { useMinWidth } from "@/lib/use-min-width";
 
+import { ShareDialog } from "../../share-dialog";
 import { useProjectShots } from "../shots/project-shots";
 import { useWorkspace } from "../workspace";
 import { AssistantPanel } from "./ai/assistant-panel";
@@ -38,6 +40,7 @@ import "./screenplay.css";
 const SHOT_PANEL_KEY = "shotlist:script-shot-panel";
 const ASSISTANT_KEY = "shotlist:script-assistant";
 const backupKey = (scriptId: string) => `shotlist:draft:${scriptId}`;
+const SCRIPT_TARGET = { kind: "script" } as const;
 
 export type ScriptWorkspaceProps = {
   script: {
@@ -49,6 +52,8 @@ export type ScriptWorkspaceProps = {
   projectId: string;
   projectTitle: string;
   shots: ShotListData;
+  /** The script's link, if it was ever shared. */
+  share: ShareSettings | null;
   imagesEnabled: boolean;
   /** Whether OPENROUTER_API_KEY is set, and which project details the AI can use. */
   ai: { enabled: boolean; details: string[]; targetRuntimeMinutes: number | null };
@@ -60,8 +65,17 @@ export function LoadedScriptWorkspace() {
   return <ScriptWorkspace key={workspace.script.id} {...workspace} />;
 }
 
-export function ScriptWorkspace({ script, projectId, projectTitle, shots, imagesEnabled, ai }: ScriptWorkspaceProps) {
+export function ScriptWorkspace({
+  script,
+  projectId,
+  projectTitle,
+  shots,
+  share: loadedShare,
+  imagesEnabled,
+  ai,
+}: ScriptWorkspaceProps) {
   const projectShots = useProjectShots(projectId, shots);
+  const [share, setShare] = useState(loadedShare);
   const [workspace, setWorkspace] = useState<HTMLDivElement | null>(null);
   const shotPanel = useShotPanelPreference(workspace);
   const [status, setStatus] = useState<SaveStatus>("saved");
@@ -229,6 +243,16 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
           shotPanelOpen={shotPanel.open && !assistantOpen}
           onToggleShotPanel={toggleShotPanel}
           onOpenTeleprompter={openTeleprompter}
+          share={
+            <ShareDialog
+              projectId={projectId}
+              target={SCRIPT_TARGET}
+              share={share}
+              onShareChange={setShare}
+              // So the link shows what's on screen from the start.
+              prepare={() => saver.settle().then(() => true)}
+            />
+          }
           ai={{
             enabled: ai.enabled,
             busy: writer.busy,

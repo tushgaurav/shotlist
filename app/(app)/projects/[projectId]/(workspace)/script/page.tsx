@@ -1,18 +1,11 @@
 import { cn } from "cn";
 import type { Metadata } from "next";
-import { Courier_Prime } from "next/font/google";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { courierPrime } from "@/lib/screenplay/font";
 
 import { LoadedScriptWorkspace } from "./script-workspace";
-
-const courierPrime = Courier_Prime({
-  weight: ["400", "700"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-screenplay",
-});
 
 export const metadata: Metadata = { title: "Script" };
 

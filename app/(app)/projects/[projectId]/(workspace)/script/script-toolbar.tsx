@@ -31,6 +31,8 @@ type Props = {
   shotPanelOpen: boolean;
   onToggleShotPanel: () => void;
   onOpenTeleprompter: () => void;
+  /** The Share button and its dialog. */
+  share: React.ReactNode;
   ai: AiControls;
 };
 
@@ -40,6 +42,7 @@ export function ScriptToolbar({
   shotPanelOpen,
   onToggleShotPanel,
   onOpenTeleprompter,
+  share,
   ai,
   ...titlePageProps
 }: Props) {
@@ -123,6 +126,7 @@ export function ScriptToolbar({
           <Separator orientation="vertical" className="mx-1.5 data-vertical:h-5 data-vertical:self-auto" />
           <TitlePageDialog {...titlePageProps} />
           <ExportMenu editor={editor} projectTitle={titlePageProps.projectTitle} titlePage={titlePageProps.titlePage} />
+          {share}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" disabled={!editor} onClick={onOpenTeleprompter}>

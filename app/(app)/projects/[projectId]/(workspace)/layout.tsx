@@ -2,6 +2,7 @@ import { filledDetails } from "@/lib/ai/context";
 import { aiEnabled } from "@/lib/ai/provider";
 import { getProject } from "@/lib/dal/projects";
 import { getOrCreateScript } from "@/lib/dal/scripts";
+import { listShares } from "@/lib/dal/shares";
 import { getShotList } from "@/lib/dal/shots";
 import { storageEnabled } from "@/lib/storage/s3";
 
@@ -19,10 +20,11 @@ export default function WorkspaceLayout({ children, params }: LayoutProps<"/proj
 }
 
 async function loadWorkspace(projectId: string): Promise<Workspace> {
-  const [project, script, shots] = await Promise.all([
+  const [project, script, shots, shares] = await Promise.all([
     getProject(projectId),
     getOrCreateScript(projectId),
     getShotList(projectId),
+    listShares(projectId),
   ]);
 
   return {
@@ -35,6 +37,7 @@ async function loadWorkspace(projectId: string): Promise<Workspace> {
       titlePage: script.titlePage,
     },
     shots,
+    share: shares.script,
     imagesEnabled: storageEnabled(),
     ai: {
       enabled: aiEnabled(),

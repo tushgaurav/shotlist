@@ -22,6 +22,7 @@ Your script lives in one app, your shot list lives in a spreadsheet, and the sec
 - **Reference frames**: drop, paste or click to add an image to any shot. The browser shrinks it, then it goes straight to your own S3 bucket.
 - **Shots next to the script**: a side panel shows the shots for whatever scene your cursor is in, and you can add more from there.
 - **AI writing that knows your project**: press ⌘K to write or rewrite at the cursor, draft a whole script from your logline and synopsis, chat with an assistant that proposes edits, or Tab through inline suggestions. It reads your project details and the script, and nothing lands until you accept it.
+- **Share links**: send the script or a note as a read-only link, with an optional password. Turn on comments and people can select a line and comment on it, no account needed.
 - **CSV export** for the AD who lives in Sheets.
 
 ## On the call sheet

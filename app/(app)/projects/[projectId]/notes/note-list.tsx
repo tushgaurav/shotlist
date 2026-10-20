@@ -1,17 +1,19 @@
 "use client";
 
 import { cn } from "cn";
-import { DownloadIcon, SquarePenIcon } from "lucide-react";
+import { DownloadIcon, LinkIcon, SquarePenIcon } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { notePreview, noteTitle } from "@/lib/notes/text";
+import type { ShareSettings } from "@/lib/share/types";
 
 import type { NoteState } from "./notes-workspace";
 
 export function NoteList({
   notes,
+  shares,
   selectedId,
   onSelect,
   onCreate,
@@ -19,6 +21,7 @@ export function NoteList({
   className,
 }: {
   notes: NoteState[];
+  shares: Record<string, ShareSettings>;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
@@ -67,7 +70,12 @@ export function NoteList({
               onClick={() => onSelect(note.id)}
               className="flex w-full flex-col gap-0.5 rounded-md px-3 py-2 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 aria-[current=page]:bg-muted"
             >
-              <span className="truncate text-sm font-medium">{noteTitle(note.text) || "New Note"}</span>
+              <span className="flex items-center gap-1.5">
+                <span className="truncate text-sm font-medium">{noteTitle(note.text) || "New Note"}</span>
+                {shares[note.id]?.enabled && (
+                  <LinkIcon aria-label="Shared with a link" className="size-3 shrink-0 text-muted-foreground" />
+                )}
+              </span>
               <span className="flex min-w-0 gap-2 text-xs text-muted-foreground">
                 <NoteDate value={note.updatedAt} />
                 <span className="truncate">{notePreview(note.text) || "No additional text"}</span>

@@ -25,7 +25,7 @@ Built for one user first. Structured so it can become a multi-user product later
 
 ### Not in v1
 
-- Multiple users, sharing, comments, real-time co-editing.
+- Multiple users, real-time co-editing. (Read-only share links with comments are built; see 7b.)
 - Revision colors, locked pages, locked scene numbers (designed for, not built — see 3.4).
 - Script breakdown (tagging cast, props, wardrobe), stripboards, call sheets, budgets.
 - Importing PDF or Final Draft files (Fountain import only).
@@ -38,6 +38,7 @@ Built for one user first. Structured so it can become a multi-user product later
 | Project type | A label for the kind of project, with an icon. Each user has their own list ("Short Film", "YouTube Video"…), seeded with four defaults at sign-up. |
 | Details | A project's optional metadata: logline, synopsis, genre, tone, target runtime, aspect ratio, language, and a header image. Everything but the image is given to the AI writer as context (see 5, AI writing). |
 | Note | A free-form note in a project: ideas, references, research, things to shoot. Its first line is its title. |
+| Share link | A read-only link to the script or a note, for people without an account. Optionally password protected, optionally open to comments. |
 | Script | The screenplay. Has one **working draft** (what you edit, autosaved) and many **versions**. |
 | Version | An immutable, named snapshot of the script, e.g. "Draft 2" or "Shooting Script". |
 | Scene | A section of the script that starts with a scene heading (`INT. KITCHEN - NIGHT`). Has a permanent ID. |
@@ -114,6 +115,7 @@ Most time on set goes into setups, not into rolling camera. So:
 - All data access goes through a server-only data access layer. One function, `requireProject(projectId)`, checks the session and ownership. Adding team members later means changing that one check to a membership-and-role check.
 - Server Actions can be called by direct POST, so every one of them goes through the data access layer. Page, layout and proxy checks are never relied on for authorization.
 - IDs are random strings, not sequential integers, so they're safe in public URLs later.
+- The one public door is a share link (7b): `lib/dal/shares.ts` decides who may read it (its owner, or anyone with the token while it's on and unlocked), and every comment action checks again.
 
 ## 4. Data model
 
@@ -241,6 +243,32 @@ notes
   deleted_at          timestamptz null  -- soft delete, so Undo can bring a note back
   created_at          timestamptz
   updated_at          timestamptz -- last edit; deleting and restoring don't change it
+
+shares                              -- read-only links; one per script or note, kept when turned off
+  id                  text pk
+  project_id          text → projects.id
+  script_id           text → scripts.id, null   -- exactly one of script_id and note_id
+  note_id             text → notes.id, null
+  token               text unique -- the secret in the URL; resetting the link makes a new one
+  enabled             boolean
+  password_hash       text null   -- Better Auth's scrypt hash
+  failed_unlocks      integer     -- wrong passwords since the last right one
+  locked_until        timestamptz null  -- 10 wrong in a row lock the link for 15 minutes
+  allow_comments      boolean
+  created_at          timestamptz
+  updated_at          timestamptz
+
+share_comments
+  id                  text pk
+  share_id            text → shares.id
+  parent_id           text → share_comments.id, null  -- replies; threads are one level deep
+  author_name         text        -- typed in by the commenter; the owner's account name for the owner
+  by_owner            boolean
+  author_key_hash     text null   -- SHA-256 of the commenter's cookie, so they can delete and resolve their own
+  body                text
+  quote               jsonb null  -- { exact, prefix, suffix }: the passage, found again by its text
+  resolved_at         timestamptz null
+  created_at          timestamptz
 
 assets                              -- uploaded images; the files live in S3
   id                  text pk
@@ -388,6 +416,34 @@ Next:
 - Pinned notes given to the AI as context, the way Details are.
 - A notes panel beside the script and the shot list, for quick capture without leaving the page.
 
+## 7b. Share links
+
+Send the script or a note to someone who doesn't have an account: a producer, an actor, a contest reader.
+
+**Sharing (owner).** A Share button in the script toolbar and in a note's header (it shows the number of open comment threads). The dialog:
+
+- **Share with a link** makes the link (`/s/<token>`, 24 random characters) and copies it. Turning it off keeps the link and its comments for later; nobody but the owner can open it meanwhile. **Reset Link…** makes a new URL and the old one stops working, for when a link travels too far.
+- **Require a password**: stored as a hash. People enter it once per browser (a signed, HTTP-only cookie, valid 30 days); changing or removing the password logs everyone out. Ten wrong passwords in a row lock the link for 15 minutes.
+- **Allow comments**, off by default.
+- The note has to be saved first, and the script's pending edits are saved before the link is made. Shared notes show a link icon in the notes list.
+
+**The shared page.** Shows the latest saved version, read-only, outside the app's shell, in the app's light, dark or Studio theme. Scripts get the screenplay page in Courier Prime, with a title page when one is set; notes look as they do in the editor (checklists can't be ticked, links open in a new tab). The page is rendered on the server from the editor's own schema, so it matches the editor without loading it. It's `noindex`, sends no `Referer`, and a password-protected link's title stays hidden until it's unlocked, even from link previews.
+
+**Comments.**
+
+- Select any text and a Comment button appears beside it. Or write a general comment. People type their name once; it's remembered in the browser. A random key in a cookie lets them delete or resolve what they wrote.
+- Commented passages are highlighted (CSS Custom Highlight API, so the rendered document isn't touched). Clicking one opens its thread; picking a thread scrolls to its passage. Script threads show their scene number.
+- Threads have replies, one level deep. The owner, signed in, sees the same page with a note at the top and an Edit link: their comments carry an Author badge, and they can resolve, reopen or delete any thread.
+- The document keeps changing after it's shared, so a comment stores its passage as text with 32 characters either side (like the W3C's text quote selectors) and finds it again on each visit: the best-matching copy wins when the words repeat. A short passage also needs what's just before or after it to match, so a rewritten line doesn't jump to the same words in another scene; it's shown as "This text has changed since" instead.
+- Wide screens show comments in a side panel; phones in a sheet, with a floating Comment button.
+- Limits: 5,000 characters a comment, and 10 comments a minute per link from people with the link.
+
+Next:
+
+- New comments while the page is open (now they show on reload), and an email or in-app notice to the owner.
+- Comments beside the script and notes editors, not only on the shared page.
+- Expiry dates, and a Download PDF option for readers.
+
 ## 8. Shoot-day planning
 
 - Create days (label, optional date, call and wrap time).
@@ -412,6 +468,7 @@ app/
   (app)/projects/[projectId]/schedule/[dayId]/page.tsx on-set view
   (app)/projects/[projectId]/details/page.tsx          header image, title, type, story and format details
   (app)/settings/project-types/page.tsx                add, rename, re-icon and delete project types
+  (share)/s/[token]/page.tsx                           shared script or note, password gate, comments
   api/auth/[...all]/route.ts                           Better Auth
   api/scripts/[scriptId]/draft/route.ts                autosave
   api/projects/[projectId]/notes/[noteId]/route.ts     note autosave; the first save creates the note
@@ -422,10 +479,13 @@ app/
 lib/
   ai/            models, prompts, the script context builder, request schemas, OpenRouter provider
   db/            Drizzle schema and client
-  dal/           server-only data access; every function checks session and ownership
+  dal/           server-only data access; every function checks session and ownership,
+                 except shares.ts's share-link side, which checks the token (7b)
   screenplay/    TipTap nodes, keyboard flow, sceneId plugin, scene extraction,
                  Fountain import/export — shared by browser and server
   notes/         note schema (TipTap StarterKit and checklists), plain-text rendering, PDF
+  share/         share types, read-only rendering from the editors' schemas, comment
+                 anchoring (text quotes, and their DOM ranges)
   draft-saver.ts autosave for the script and notes: debounce, retry, localStorage backup
   shots/         shot types, label numbering, presets, grouping, CSV, the client shot store,
                  image uploader
@@ -455,7 +515,7 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | PDF | @react-pdf/renderer |
 | AI | AI SDK (`ai`, `@ai-sdk/react`) with the OpenRouter provider; streamdown for the assistant's replies |
 | Validation | zod |
-| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text, note PDF |
+| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text, note PDF, comment anchoring, shared-page rendering |
 
 S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` (not the `AWS_*` names, which Vercel reserves). `S3_ENDPOINT` is optional, for S3-compatible services such as MinIO, R2 or a local fake. AI writing needs `OPENROUTER_API_KEY`; the AI SDK packages need Node 22 or later.
 
@@ -472,7 +532,9 @@ S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRE
 
 Added between 4 and 5: **Notes** (see 7a). Basic version done: notes section, editor, autosave. Next: Draft from Notes, Turn into shots.
 
-After v1, if it becomes a product: project members and roles, share links, comments, real-time co-editing (Yjs), script breakdown, call sheets, Final Draft import.
+Also added: **Share links** (see 7b), read-only links to the script or a note, with optional passwords and comments.
+
+After v1, if it becomes a product: project members and roles, real-time co-editing (Yjs), script breakdown, call sheets, Final Draft import.
 
 Write a real short script in the editor after milestone 2, before building on top of it. The editor is what you'll spend the most time in, and problems there are cheapest to fix early.
 

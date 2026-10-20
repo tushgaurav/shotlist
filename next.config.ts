@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
   },
   // The sidebar's account menu sits in the bottom-left corner.
   devIndicators: { position: "bottom-right" },
+  async headers() {
+    return [
+      {
+        // Shared links carry their secret in the URL: keep it out of Referer headers and search engines.
+        source: "/s/:token",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: "/", destination: "/projects", permanent: false },

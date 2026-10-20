@@ -57,6 +57,7 @@ export function NoteEditor({
   onDelete,
   onDownload,
   onBack,
+  share,
   className,
 }: {
   note: NoteState;
@@ -66,6 +67,8 @@ export function NoteEditor({
   onDelete: () => void;
   onDownload: () => void;
   onBack: () => void;
+  /** The Share button and its dialog. */
+  share: React.ReactNode;
   className?: string;
 }) {
   // Only read when the editor is created; the editor owns the document from then on.
@@ -95,6 +98,7 @@ export function NoteEditor({
         <FormatButtons key={editor ? "ready" : "loading"} editor={editor} disabled={status === "conflict"} />
         <div className="ml-auto flex items-center gap-1">
           <SaveStatusIndicator status={status} {...STATUS[status]} />
+          {share}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" aria-label="Note Actions">

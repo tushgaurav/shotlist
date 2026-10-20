@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listNotes } from "@/lib/dal/notes";
 import { getProject } from "@/lib/dal/projects";
+import { listShares } from "@/lib/dal/shares";
 
 import { NotesWorkspace } from "./notes-workspace";
 
@@ -22,7 +23,11 @@ export default function NotesPage({ params }: PageProps<"/projects/[projectId]/n
 // Notes are short, so the page loads all of them and switching between them is instant.
 async function NotesLoader({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const [project, notes] = await Promise.all([getProject(projectId), listNotes(projectId)]);
+  const [project, notes, shares] = await Promise.all([
+    getProject(projectId),
+    listNotes(projectId),
+    listShares(projectId),
+  ]);
 
   return (
     <NotesWorkspace
@@ -30,6 +35,7 @@ async function NotesLoader({ params }: { params: Promise<{ projectId: string }> 
       projectId={projectId}
       projectTitle={project.title}
       notes={notes.map((note) => ({ ...note, updatedAt: note.updatedAt.toISOString() }))}
+      shares={shares.notes}
     />
   );
 }

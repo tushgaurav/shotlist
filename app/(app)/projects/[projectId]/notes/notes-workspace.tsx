@@ -15,7 +15,9 @@ import { parseNoteDoc } from "@/lib/notes/schema";
 import { noteText, noteTitle } from "@/lib/notes/text";
 import { emptyNote, type NoteData } from "@/lib/notes/types";
 import { defaultPaper } from "@/lib/paper";
+import type { ShareSettings } from "@/lib/share/types";
 
+import { ShareDialog } from "../share-dialog";
 import { deleteNoteAction, restoreNoteAction } from "./actions";
 import { NoteEditor } from "./note-editor";
 import { NoteList } from "./note-list";
@@ -49,12 +51,16 @@ export function NotesWorkspace({
   projectId,
   projectTitle,
   notes: loaded,
+  shares: loadedShares,
 }: {
   projectId: string;
   projectTitle: string;
   notes: NoteData[];
+  /** Links to notes, by note ID. */
+  shares: Record<string, ShareSettings>;
 }) {
   const [notes, setNotes] = useState<NoteState[]>(() => loaded.map((note) => ({ ...note, version: 0 })));
+  const [shares, setShares] = useState(loadedShares);
   const [statuses, setStatuses] = useState<Record<string, SaveStatus>>({});
   const [focusId, setFocusId] = useState<string | null>(null);
   // One per note, made on its first edit. They outlive the editor, which only shows one note.
@@ -229,6 +235,13 @@ export function NotesWorkspace({
     showNote(id);
   };
 
+  /** A note can only be shared once the server has it. */
+  const saveForSharing = async (note: NoteState) => {
+    const saver = savers.current.get(note.id);
+    await saver?.settle();
+    return (saver?.currentRevision ?? note.revision) > 0;
+  };
+
   const createNote = () => {
     if (selected && !selected.text) deleteNote(selected);
     setFocusId(addNote().id);
@@ -256,6 +269,7 @@ export function NotesWorkspace({
     <div className="flex flex-1">
       <NoteList
         notes={sorted}
+        shares={shares}
         selectedId={selected?.id ?? null}
         onSelect={select}
         onCreate={createNote}
@@ -271,6 +285,16 @@ export function NotesWorkspace({
           onChange={changeNote}
           onDelete={() => deleteNote(selected)}
           onDownload={() => void downloadNotesPdf([selected], noteTitle(selected.text), projectTitle)}
+          share={
+            <ShareDialog
+              projectId={projectId}
+              target={{ kind: "note", noteId: selected.id }}
+              share={shares[selected.id] ?? null}
+              onShareChange={(share) => setShares((current) => ({ ...current, [selected.id]: share }))}
+              prepare={() => saveForSharing(selected)}
+              disabled={statuses[selected.id] === "conflict"}
+            />
+          }
           onBack={() => select(null)}
           className={requested ? undefined : "max-md:hidden"}
         />
