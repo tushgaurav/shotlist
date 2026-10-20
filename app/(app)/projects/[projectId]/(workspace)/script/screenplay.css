@@ -29,6 +29,19 @@
   --sp-edge: 0 0 0 1px var(--border);
 }
 
+/* Studio keeps the page paper on ink, with orange for AI lines since lime washes out on paper. */
+.studio .screenplay-page {
+  --sp-paper: var(--paper);
+  --sp-ink: oklch(0.2221 0 0);
+  --sp-muted: oklch(0.6169 0.0078 88.67);
+  --sp-edge: 0 24px 60px -30px oklch(0 0 0 / 0.8);
+  --sp-ai: var(--orange);
+}
+
+.studio .screenplay-page [data-slot="skeleton"] {
+  background: oklch(0.2221 0 0 / 8%);
+}
+
 /* Narrow pages (small screens, or panels beside the page) trade the margins for text width. */
 @container page (max-width: 7in) {
   .screenplay-page {

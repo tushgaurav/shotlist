@@ -57,6 +57,10 @@
   color: oklch(0.82 0.09 230);
 }
 
+.studio .prompter-speaker {
+  color: var(--lime);
+}
+
 .prompter-cue {
   font-size: calc(var(--prompter-size) * 0.45);
   line-height: 1.35;

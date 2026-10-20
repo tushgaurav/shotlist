@@ -4,9 +4,11 @@
 
 @source "../node_modules/streamdown/dist/*.js";
 
-@custom-variant dark (&:is(.dark *));
+/* Studio is a dark theme too, so dark: styles apply under it. */
+@custom-variant dark (&:is(.dark *, .studio *));
 
 :root {
+  --font-sans: var(--font-geist);
   --radius: 0.625rem;
   --background: oklch(0.9611 0.0085 197.02);
   --foreground: oklch(0.38 0.06 212.65);
@@ -93,6 +95,66 @@
   --shadow-2xl: 0 1px 3px 0px oklch(0 0 0 / 0.25);
 }
 
+/* The landing page's look: ink, paper, lime and Mona Sans. Forced-dark parts (the teleprompter) stay Studio. */
+.studio,
+.studio .dark {
+  color-scheme: dark;
+
+  --ink: oklch(0.1822 0 0);
+  --paper: oklch(0.9503 0.0143 84.58);
+  --lime: oklch(0.9445 0.178 121.99);
+  --orange: oklch(0.7039 0.1915 37.13);
+
+  --font-sans: var(--font-mona);
+  --radius: 0.75rem;
+  --background: var(--ink);
+  --foreground: var(--paper);
+  --card: oklch(0.2134 0 0);
+  --card-foreground: var(--paper);
+  --popover: oklch(0.235 0 0);
+  --popover-foreground: var(--paper);
+  --primary: var(--lime);
+  --primary-foreground: var(--ink);
+  --secondary: oklch(0.2562 0 0);
+  --secondary-foreground: var(--paper);
+  --muted: oklch(0.235 0 0);
+  --muted-foreground: oklch(0.6739 0.0094 84.58);
+  --accent: oklch(0.2645 0 0);
+  --accent-foreground: var(--paper);
+  --destructive: oklch(0.68 0.19 22);
+  --border: oklch(0.9503 0.0143 84.58 / 9%);
+  --input: oklch(0.9503 0.0143 84.58 / 13%);
+  --ring: var(--lime);
+  --chart-1: var(--lime);
+  --chart-2: var(--orange);
+  --chart-3: oklch(0.6442 0.1989 284.91);
+  --chart-4: oklch(0.659 0.1813 261.39);
+  --chart-5: oklch(0.8547 0.1655 86.09);
+  --sidebar: var(--ink);
+  --sidebar-foreground: var(--paper);
+  --sidebar-primary: var(--lime);
+  --sidebar-primary-foreground: var(--ink);
+  --sidebar-accent: oklch(0.2562 0 0);
+  --sidebar-accent-foreground: var(--paper);
+  --sidebar-border: oklch(0.9503 0.0143 84.58 / 9%);
+  --sidebar-ring: var(--lime);
+
+  --shadow-2xs: 0 1px 2px 0px oklch(0 0 0 / 0.3);
+  --shadow-xs: 0 1px 2px 0px oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px 0px oklch(0 0 0 / 0.35), 0 1px 2px -1px oklch(0 0 0 / 0.35);
+  --shadow: 0 1px 3px 0px oklch(0 0 0 / 0.35), 0 1px 2px -1px oklch(0 0 0 / 0.35);
+  --shadow-md: 0 2px 4px 0px oklch(0 0 0 / 0.35), 0 4px 12px -2px oklch(0 0 0 / 0.4);
+  --shadow-lg: 0 2px 4px 0px oklch(0 0 0 / 0.35), 0 10px 30px -12px oklch(0 0 0 / 0.7);
+  --shadow-xl: 0 2px 4px 0px oklch(0 0 0 / 0.35), 0 20px 50px -20px oklch(0 0 0 / 0.8);
+  --shadow-2xl: 0 30px 80px -30px oklch(0 0 0 / 0.9);
+}
+
+/* Page titles set like the landing page's headlines. Unlayered, so it wins over their utilities. */
+.studio h1 {
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
@@ -165,6 +227,11 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+
+  .studio ::selection {
+    background: var(--lime);
+    color: var(--ink);
   }
 
   h1 {

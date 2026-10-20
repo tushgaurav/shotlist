@@ -2,6 +2,7 @@
 
 import {
   ChevronsUpDownIcon,
+  ClapperboardIcon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
@@ -97,6 +98,10 @@ export function NavUser({ name, email, image }: { name: string; email: string; i
                   <DropdownMenuRadioItem value="dark">
                     <MoonIcon />
                     Dark
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="studio">
+                    <ClapperboardIcon />
+                    Studio
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="system">
                     <MonitorIcon />
