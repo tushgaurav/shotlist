@@ -1,0 +1,149 @@
+/* A note: plain, readable text, with the first line set as its title. */
+.note-content {
+  min-height: 60svh;
+  outline: none;
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.note-content p {
+  margin: 0;
+}
+
+.note-content :is(h1, h2, h3) {
+  margin: 1.25em 0 0.25em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.note-content h1 {
+  font-size: 1.5rem;
+}
+
+.note-content h2 {
+  font-size: 1.25rem;
+}
+
+.note-content h3 {
+  font-size: 1.0625rem;
+}
+
+.note-content > :first-child {
+  margin-top: 0;
+}
+
+.note-content > :is(p, h1, h2, h3):first-child {
+  margin-bottom: 0.5rem;
+  font-size: 1.625rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.note-content :is(ul, ol) {
+  margin: 0.25em 0;
+  padding-left: 1.5em;
+}
+
+.note-content ul {
+  list-style: disc;
+}
+
+.note-content ol {
+  list-style: decimal;
+}
+
+.note-content li::marker {
+  color: var(--muted-foreground);
+}
+
+.note-content ul[data-type="taskList"] {
+  padding-left: 0.125em;
+  list-style: none;
+}
+
+.note-content ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-start;
+}
+
+.note-content ul[data-type="taskList"] li > label {
+  flex: none;
+  margin-top: 0.325em;
+  user-select: none;
+}
+
+.note-content ul[data-type="taskList"] li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-content ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.note-content input[type="checkbox"] {
+  display: block;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.note-content blockquote {
+  margin: 0.5em 0;
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+}
+
+.note-content code {
+  border-radius: 0.25rem;
+  padding: 0.1em 0.3em;
+  background: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875em;
+}
+
+.note-content pre {
+  margin: 0.5em 0;
+  border-radius: 0.5rem;
+  padding: 0.75em 1em;
+  overflow-x: auto;
+  background: var(--muted);
+}
+
+.note-content pre code {
+  padding: 0;
+  background: none;
+}
+
+.note-content hr {
+  margin: 1.25em 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.note-content hr.ProseMirror-selectednode {
+  border-top-color: var(--ring);
+}
+
+.note-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.note-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--muted-foreground);
+  font-weight: 400;
+  pointer-events: none;
+}

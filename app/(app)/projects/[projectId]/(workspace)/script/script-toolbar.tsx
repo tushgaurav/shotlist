@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { shortcutLabel, useIsMac } from "@/lib/keyboard";
-import type { SaveStatus } from "@/lib/screenplay/draft-saver";
+import type { SaveStatus } from "@/lib/draft-saver";
 import { setElementType } from "@/lib/screenplay/editor/commands";
 import { ELEMENT_LABELS, isElementType, SHORTCUT_ORDER } from "@/lib/screenplay/elements";
 import type { TitlePage } from "@/lib/screenplay/types";

@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { DraftSaver, SaveStatus } from "@/lib/screenplay/draft-saver";
+import type { DraftSaver, SaveStatus } from "@/lib/draft-saver";
 import type { ImageUploader } from "@/lib/shots/image-uploader";
 import { shotLabel } from "@/lib/shots/numbering";
 import type { ShotStore } from "@/lib/shots/shot-store";

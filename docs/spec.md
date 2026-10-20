@@ -11,6 +11,8 @@ A web app for planning video productions. Version 1 covers two features that are
 
 The connection is the point: every shot belongs to a scene, shots stay attached to their scene through edits and versions, and when the script changes you can see which shots are affected.
 
+Alongside them, **notes**: quick, free-form notes per project. Not every project starts with a script. Many (music videos, commercials, YouTube videos) start as a pile of ideas and references and go straight to shots. Notes give them somewhere to start, and will feed the AI writer (see 7a).
+
 Built for one user first. Structured so it can become a multi-user product later without a rewrite.
 
 ### Goals for v1
@@ -35,6 +37,7 @@ Built for one user first. Structured so it can become a multi-user product later
 | Project | One production (short, music video, commercial, feature). Has one script and one shot list. |
 | Project type | A label for the kind of project, with an icon. Each user has their own list ("Short Film", "YouTube Video"…), seeded with four defaults at sign-up. |
 | Details | A project's optional metadata: logline, synopsis, genre, tone, target runtime, aspect ratio, language, and a header image. Everything but the image is given to the AI writer as context (see 5, AI writing). |
+| Note | A free-form note in a project: ideas, references, research, things to shoot. Its first line is its title. |
 | Script | The screenplay. Has one **working draft** (what you edit, autosaved) and many **versions**. |
 | Version | An immutable, named snapshot of the script, e.g. "Draft 2" or "Shooting Script". |
 | Scene | A section of the script that starts with a scene heading (`INT. KITCHEN - NIGHT`). Has a permanent ID. |
@@ -229,6 +232,16 @@ setups
   est_setup_minutes   integer null
   notes               text null
 
+notes
+  id                  text pk     -- generated in the browser; the row is written by the note's first save
+  project_id          text → projects.id
+  content             jsonb       -- ProseMirror JSON
+  text                text        -- plain-text rendering with Markdown-style markers, for the list, search and the AI
+  revision            integer     -- +1 on every save; stale saves (another tab) are rejected
+  deleted_at          timestamptz null  -- soft delete, so Undo can bring a note back
+  created_at          timestamptz
+  updated_at          timestamptz -- last edit; deleting and restoring don't change it
+
 assets                              -- uploaded images; the files live in S3
   id                  text pk
   project_id          text → projects.id
@@ -356,6 +369,24 @@ CSV (built): one row per shot with scene number and heading, generated in the br
 
 PDF in table or storyboard layout — whole project, per scene, or per shoot day (milestone 5).
 
+## 7a. Notes
+
+Built (basic version):
+
+- A Notes section in the project nav, listed first. Two panes: the notes list (most recently edited first, with title, time and a preview) and the open note. Phones show one pane at a time.
+- The first line is the title, as in most notes apps, and is set larger. Rich text: headings, bold, italic, bulleted and numbered lists, checklists, quotes, code, links (pasted URLs link themselves). Markdown shortcuts work (`# `, `- `, `1. `, `[ ] `, `> `).
+- "New Note" opens an empty note at once; nothing is written until there's something in it. A note left empty is removed when you leave it.
+- Autosave works like the script's: debounced, offline backup in `localStorage`, restored after a crash, revision check against other tabs. A stale backup is offered back as a new note.
+- Delete with Undo (soft delete). The open note is in the URL (`?note=`).
+- The page loads every note of the project at once, so switching is instant. Revisit if projects end up with hundreds.
+
+Next:
+
+- **Draft from Notes**: plan and write a first draft from the notes, alongside "Draft from Details".
+- **Turn into shots**: select lines in a note and get standalone shots, for projects that skip the script.
+- Pinned notes given to the AI as context, the way Details are.
+- A notes panel beside the script and the shot list, for quick capture without leaving the page.
+
 ## 8. Shoot-day planning
 
 - Create days (label, optional date, call and wrap time).
@@ -371,7 +402,8 @@ PDF in table or storyboard layout — whole project, per scene, or per shoot day
 app/
   (auth)/sign-in/page.tsx
   (app)/projects/page.tsx                              project list
-  (app)/projects/[projectId]/layout.tsx                project nav: Script · Shots · Schedule · Details
+  (app)/projects/[projectId]/layout.tsx                project nav: Notes · Script · Shots · Schedule · Details
+  (app)/projects/[projectId]/notes/page.tsx            notes list and editor (?note=)
   (app)/projects/[projectId]/script/page.tsx           editor
   (app)/projects/[projectId]/script/versions/page.tsx  history and compare (?a=&b=)
   (app)/projects/[projectId]/shots/page.tsx            table or storyboard
@@ -381,6 +413,7 @@ app/
   (app)/settings/project-types/page.tsx                add, rename, re-icon and delete project types
   api/auth/[...all]/route.ts                           Better Auth
   api/scripts/[scriptId]/draft/route.ts                autosave
+  api/projects/[projectId]/notes/[noteId]/route.ts     note autosave; the first save creates the note
   api/assets/[assetId]/[variant]/route.ts              image redirect to S3 (owner only)
   api/projects/[projectId]/export/route.ts             PDF, Fountain
   api/projects/[projectId]/ai/{write,outline,chat,complete}/route.ts
@@ -391,6 +424,8 @@ lib/
   dal/           server-only data access; every function checks session and ownership
   screenplay/    TipTap nodes, keyboard flow, sceneId plugin, scene extraction,
                  Fountain import/export — shared by browser and server
+  notes/         note schema (TipTap StarterKit and checklists), plain-text rendering
+  draft-saver.ts autosave for the script and notes: debounce, retry, localStorage backup
   shots/         shot types, label numbering, presets, grouping, CSV, the client shot store,
                  image uploader
   images/        browser-side resizing and encoding
@@ -419,7 +454,7 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | PDF | @react-pdf/renderer |
 | AI | AI SDK (`ai`, `@ai-sdk/react`) with the OpenRouter provider; streamdown for the assistant's replies |
 | Validation | zod |
-| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context |
+| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text |
 
 S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` (not the `AWS_*` names, which Vercel reserves). `S3_ENDPOINT` is optional, for S3-compatible services such as MinIO, R2 or a local fake. AI writing needs `OPENROUTER_API_KEY`; the AI SDK packages need Node 22 or later.
 
@@ -433,6 +468,8 @@ S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRE
    - Pass 2 (done): images on S3, storyboard view, script side panel, shot counts in the scene sidebar.
 5. **Planning** — shoot days, setups, drag-to-schedule, time totals, PDF export, on-set view.
 6. **Polish** — pagination and eighths, screenplay PDF export, lock scene numbers, revision colors.
+
+Added between 4 and 5: **Notes** (see 7a). Basic version done: notes section, editor, autosave. Next: Draft from Notes, Turn into shots.
 
 After v1, if it becomes a product: project members and roles, share links, comments, real-time co-editing (Yjs), script breakdown, call sheets, Final Draft import.
 

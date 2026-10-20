@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { downloadText, safeFileName } from "@/lib/download";
-import { backupKey, DraftSaver, readBackup, type SaveStatus } from "@/lib/screenplay/draft-saver";
+import { DraftSaver, readBackup, type SaveStatus } from "@/lib/draft-saver";
 import { isBlankDoc } from "@/lib/screenplay/editor/ai-ranges";
 import { committedDoc, getAiSuggestion, isAiSuggestionTransaction } from "@/lib/screenplay/editor/ai-suggestion";
 import { screenplayEditorExtensions } from "@/lib/screenplay/editor/extensions";
@@ -37,6 +37,7 @@ import "./screenplay.css";
 
 const SHOT_PANEL_KEY = "shotlist:script-shot-panel";
 const ASSISTANT_KEY = "shotlist:script-assistant";
+const backupKey = (scriptId: string) => `shotlist:draft:${scriptId}`;
 
 export type ScriptWorkspaceProps = {
   script: {
@@ -68,7 +69,8 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
   const [saver] = useState(
     () =>
       new DraftSaver({
-        scriptId: script.id,
+        url: `/api/scripts/${script.id}/draft`,
+        backupKey: backupKey(script.id),
         revision: script.draftRevision,
         onStatusChange: setStatus,
         storage: typeof window === "undefined" ? null : window.localStorage,
@@ -98,7 +100,7 @@ export function ScriptWorkspace({ script, projectId, projectTitle, shots, images
     if (!editor || restoreChecked.current) return;
     restoreChecked.current = true;
 
-    const backup = readBackup(script.id, window.localStorage);
+    const backup = readBackup(backupKey(script.id), window.localStorage);
     if (!backup) return;
     window.localStorage.removeItem(backupKey(script.id));
 

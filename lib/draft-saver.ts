@@ -3,7 +3,10 @@ export type SaveStatus = "saved" | "saving" | "offline" | "error" | "conflict";
 export type DraftBackup = { baseRevision: number; draft: unknown; savedAt: number };
 
 type Options = {
-  scriptId: string;
+  /** Where to PUT `{ revision, draft }`. Answers with the new revision, or 409 if it's stale. */
+  url: string;
+  /** Where unsaved changes are kept in localStorage. */
+  backupKey: string;
   revision: number;
   onStatusChange: (status: SaveStatus) => void;
   debounceMs?: number;
@@ -11,10 +14,6 @@ type Options = {
   fetch?: typeof fetch;
   storage?: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null;
 };
-
-export function backupKey(scriptId: string) {
-  return `shotlist:draft:${scriptId}`;
-}
 
 /**
  * Autosaves the working draft: debounced, one request at a time, retried when offline.
@@ -40,6 +39,11 @@ export class DraftSaver {
 
   get currentStatus() {
     return this.status;
+  }
+
+  /** The revision the server last confirmed; 0 if nothing has been saved yet. */
+  get currentRevision() {
+    return this.revision;
   }
 
   /** Call after every document change with a function that serializes the new document. */
@@ -69,6 +73,17 @@ export class DraftSaver {
     if (this.dirty && this.status === "saving") await this.flush();
   }
 
+  /**
+   * Stops saving and forgets unsaved changes and their backup, e.g. once the document is
+   * deleted. A save already in flight still finishes; settle() first to wait for it.
+   */
+  discard() {
+    clearTimeout(this.saveTimer);
+    clearTimeout(this.backupTimer);
+    this.dirty = false;
+    this.options.storage?.removeItem(this.options.backupKey);
+  }
+
   private schedule(delay: number) {
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => void this.save(), delay);
@@ -91,7 +106,7 @@ export class DraftSaver {
     const fetchFn = this.options.fetch ?? fetch;
     let response: Response;
     try {
-      response = await fetchFn(`/api/scripts/${this.options.scriptId}/draft`, {
+      response = await fetchFn(this.options.url, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ revision: this.revision, draft }),
@@ -118,7 +133,7 @@ export class DraftSaver {
       this.schedule(this.options.debounceMs ?? 1500);
     } else {
       clearTimeout(this.backupTimer);
-      this.options.storage?.removeItem(backupKey(this.options.scriptId));
+      this.options.storage?.removeItem(this.options.backupKey);
       this.setStatus("saved");
     }
   }
@@ -134,7 +149,7 @@ export class DraftSaver {
     const draft = this.getDraft();
     const backup: DraftBackup = { baseRevision: this.revision, draft, savedAt: Date.now() };
     try {
-      this.options.storage?.setItem(backupKey(this.options.scriptId), JSON.stringify(backup));
+      this.options.storage?.setItem(this.options.backupKey, JSON.stringify(backup));
     } catch {
       // Storage full or unavailable; the server copy is all we have.
     }
@@ -147,12 +162,9 @@ export class DraftSaver {
   }
 }
 
-export function readBackup(
-  scriptId: string,
-  storage: Pick<Storage, "getItem"> | null,
-): DraftBackup | null {
+export function readBackup(key: string, storage: Pick<Storage, "getItem"> | null): DraftBackup | null {
   try {
-    const raw = storage?.getItem(backupKey(scriptId));
+    const raw = storage?.getItem(key);
     if (!raw) return null;
     const backup = JSON.parse(raw) as DraftBackup;
     return typeof backup.baseRevision === "number" && backup.draft ? backup : null;

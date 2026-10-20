@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { backupKey, DraftSaver, readBackup, type SaveStatus } from "./draft-saver";
+import { DraftSaver, readBackup, type SaveStatus } from "./draft-saver";
 
 class MemoryStorage {
   items = new Map<string, string>();
@@ -20,7 +20,8 @@ function setup(respond: (body: { revision: number; draft: unknown }) => Response
   });
 
   const saver = new DraftSaver({
-    scriptId: "s1",
+    url: "/api/scripts/s1/draft",
+    backupKey: "backup:s1",
     revision: 3,
     onStatusChange: (status) => statuses.push(status),
     fetch: fetch as unknown as typeof globalThis.fetch,
@@ -39,16 +40,17 @@ afterEach(() => vi.useRealTimers());
 
 describe("DraftSaver", () => {
   it("debounces edits into one save and clears the backup afterwards", async () => {
-    const { edit, statuses, storage, requests } = setup((body) => ok(body.revision + 1));
+    const { edit, statuses, storage, requests, fetch } = setup((body) => ok(body.revision + 1));
     edit("a");
     edit("ab");
     await vi.advanceTimersByTimeAsync(400);
-    expect(readBackup("s1", storage)?.draft).toEqual({ text: "ab" });
+    expect(readBackup("backup:s1", storage)?.draft).toEqual({ text: "ab" });
 
     await vi.advanceTimersByTimeAsync(1500);
     expect(requests).toEqual([{ revision: 3, draft: { text: "ab" } }]);
+    expect(fetch).toHaveBeenCalledWith("/api/scripts/s1/draft", expect.objectContaining({ method: "PUT" }));
     expect(statuses).toEqual(["saving", "saved"]);
-    expect(storage.getItem(backupKey("s1"))).toBeNull();
+    expect(storage.getItem("backup:s1")).toBeNull();
   });
 
   it("sends the next save with the revision the server returned", async () => {
@@ -87,13 +89,13 @@ describe("DraftSaver", () => {
     edit("a");
     await vi.advanceTimersByTimeAsync(1500);
     expect(statuses.at(-1)).toBe("offline");
-    expect(readBackup("s1", storage)).toMatchObject({ baseRevision: 3, draft: { text: "a" } });
+    expect(readBackup("backup:s1", storage)).toMatchObject({ baseRevision: 3, draft: { text: "a" } });
 
     online = true;
     await vi.advanceTimersByTimeAsync(5000);
     expect(requests).toHaveLength(2);
     expect(statuses.at(-1)).toBe("saved");
-    expect(storage.getItem(backupKey("s1"))).toBeNull();
+    expect(storage.getItem("backup:s1")).toBeNull();
   });
 
   it("stops on a revision conflict", async () => {
@@ -106,6 +108,29 @@ describe("DraftSaver", () => {
     await vi.advanceTimersByTimeAsync(10_000);
     expect(requests).toHaveLength(1);
     expect(saver.currentStatus).toBe("conflict");
+  });
+
+  it("discard stops retrying and drops the backup", async () => {
+    const { saver, edit, storage, requests } = setup(() => {
+      throw new TypeError("Failed to fetch");
+    });
+    edit("a");
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(readBackup("backup:s1", storage)).not.toBeNull();
+
+    saver.discard();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(requests).toHaveLength(1);
+    expect(saver.hasUnsavedChanges).toBe(false);
+    expect(storage.getItem("backup:s1")).toBeNull();
+  });
+
+  it("reports the revision the server confirmed", async () => {
+    const { saver, edit } = setup((body) => ok(body.revision + 1));
+    expect(saver.currentRevision).toBe(3);
+    edit("a");
+    await saver.flush();
+    expect(saver.currentRevision).toBe(4);
   });
 
   it("flush saves immediately", async () => {
