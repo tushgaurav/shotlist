@@ -3,16 +3,19 @@
 import { useChat } from "@ai-sdk/react";
 import type { Editor } from "@tiptap/react";
 import { DefaultChatTransport } from "ai";
-import { ArrowUpIcon, MessageSquarePlusIcon, RotateCwIcon, SquareIcon, XIcon } from "lucide-react";
+import { ArrowUpIcon, CheckIcon, CopyIcon, MessageSquarePlusIcon, PencilIcon, RotateCwIcon, SquareIcon, XIcon } from "lucide-react";
 import {
   useEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import { Streamdown } from "streamdown";
 import "streamdown/styles.css";
+
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -178,6 +181,141 @@ function chatSnapshot(editor: Editor): ScriptSnapshot {
   return scriptSnapshot(doc, { cursor });
 }
 
+function messageText(message: AssistantMessage) {
+  return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
+}
+
+function QuietIconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button type="button" variant="ghost" size="icon-xs" className="text-muted-foreground" aria-label={label} onClick={onClick}>
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** The sent message, opened in place so it can be changed and sent again. */
+function MessageEditor({ initial, onCancel, onSubmit }: { initial: string; onCancel: () => void; onSubmit: (text: string) => void }) {
+  const [draft, setDraft] = useState(initial);
+  const field = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const element = field.current;
+    if (!element) return;
+    element.focus();
+    const end = element.value.length;
+    element.setSelectionRange(end, end);
+    element.closest("form")?.scrollIntoView({ block: "nearest" });
+  }, []);
+
+  const submit = () => {
+    const trimmed = draft.trim();
+    if (trimmed) onSubmit(trimmed);
+  };
+
+  return (
+    <form
+      className="w-full rounded-2xl rounded-br-md bg-primary/10 px-3 pt-2 pb-1.5"
+      onSubmit={(event) => {
+        event.preventDefault();
+        submit();
+      }}
+    >
+      <textarea
+        ref={field}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            onCancel();
+          } else if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+            event.preventDefault();
+            submit();
+          }
+        }}
+        rows={2}
+        maxLength={8000}
+        aria-label="Edit message"
+        className="field-sizing-content block max-h-48 min-h-10 w-full resize-none overflow-y-auto bg-transparent text-sm outline-none"
+      />
+      <div className="mt-1.5 flex justify-end gap-1.5">
+        <Button type="button" size="xs" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" size="xs" disabled={!draft.trim()}>
+          Send
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function UserTurn({
+  text,
+  editing,
+  busy,
+  onEdit,
+  onCancel,
+  onSubmit,
+  onResend,
+}: {
+  text: string;
+  editing: boolean;
+  busy: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onSubmit: (text: string) => void;
+  onResend: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (copiedTimer.current !== null) window.clearTimeout(copiedTimer.current);
+  }, []);
+
+  if (editing) return <MessageEditor initial={text} onCancel={onCancel} onSubmit={onSubmit} />;
+
+  const copy = () => {
+    const done = () => {
+      setCopied(true);
+      if (copiedTimer.current !== null) window.clearTimeout(copiedTimer.current);
+      copiedTimer.current = window.setTimeout(() => setCopied(false), 1500);
+    };
+    try {
+      void navigator.clipboard.writeText(text).then(done, () => toast("Couldn't copy that."));
+    } catch {
+      toast("Couldn't copy that.");
+    }
+  };
+
+  return (
+    <div className="group/turn flex max-w-full flex-col items-end self-end">
+      <div className="ml-8 rounded-2xl rounded-br-md bg-primary/10 px-3 py-2 text-sm whitespace-pre-wrap">{text}</div>
+      <div className="mt-0.5 flex h-6 items-center justify-end gap-0.5 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/turn:opacity-100 [@media(hover:hover)]:group-focus-within/turn:opacity-100">
+        <QuietIconButton label="Copy" onClick={copy}>
+          {copied ? <CheckIcon /> : <CopyIcon />}
+        </QuietIconButton>
+        {!busy && (
+          <QuietIconButton label="Resend" onClick={onResend}>
+            <RotateCwIcon />
+          </QuietIconButton>
+        )}
+        {!busy && text.trim() && (
+          <QuietIconButton label="Edit" onClick={onEdit}>
+            <PencilIcon />
+          </QuietIconButton>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function starters(blank: boolean) {
   if (blank) {
     return [
@@ -222,6 +360,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
   }, [messages, busy, projectId]);
 
   const [input, setInput] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
@@ -242,13 +381,25 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
     clearError();
     stick.current = true;
     setInput("");
+    setEditingId(null);
     void sendMessage({ text: trimmed }, requestBody());
+  };
+
+  // Drops every reply after this message, then asks again. Editing replaces the message first.
+  const resend = (messageId: string, text?: string) => {
+    if (busy) return;
+    clearError();
+    stick.current = true;
+    setEditingId(null);
+    if (text === undefined) void regenerate({ messageId, ...requestBody() });
+    else void sendMessage({ text, messageId }, requestBody());
   };
 
   const newChat = () => {
     stop();
     setMessages([]);
     clearError();
+    setEditingId(null);
     inputRef.current?.focus();
   };
 
@@ -308,9 +459,16 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
           <div className="flex flex-col gap-4">
             {messages.map((message) =>
               message.role === "user" ? (
-                <div key={message.id} className="ml-8 self-end rounded-2xl rounded-br-md bg-primary/10 px-3 py-2 text-sm whitespace-pre-wrap">
-                  {message.parts.map((part) => (part.type === "text" ? part.text : "")).join("")}
-                </div>
+                <UserTurn
+                  key={message.id}
+                  text={messageText(message)}
+                  editing={editingId === message.id}
+                  busy={busy}
+                  onEdit={() => setEditingId(message.id)}
+                  onCancel={() => setEditingId(null)}
+                  onSubmit={(text) => resend(message.id, text)}
+                  onResend={() => resend(message.id)}
+                />
               ) : (
                 <div key={message.id} className="text-sm">
                   {message.parts.map((part, index) => {
