@@ -8,6 +8,7 @@ import { cn } from "cn";
 import {
   ArrowLeftIcon,
   BoldIcon,
+  DownloadIcon,
   EllipsisIcon,
   HeadingIcon,
   ItalicIcon,
@@ -26,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Kbd } from "@/components/ui/kbd";
@@ -53,6 +55,7 @@ export function NoteEditor({
   autofocus,
   onChange,
   onDelete,
+  onDownload,
   onBack,
   className,
 }: {
@@ -61,6 +64,7 @@ export function NoteEditor({
   autofocus: boolean;
   onChange: (note: NoteState, doc: ProseMirrorNode) => void;
   onDelete: () => void;
+  onDownload: () => void;
   onBack: () => void;
   className?: string;
 }) {
@@ -97,7 +101,12 @@ export function NoteEditor({
                 <EllipsisIcon />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem disabled={!note.text} onSelect={onDownload}>
+                <DownloadIcon />
+                Download PDF
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                 <Trash2Icon />
                 Delete Note

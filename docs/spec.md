@@ -379,6 +379,7 @@ Built (basic version):
 - Autosave works like the script's: debounced, offline backup in `localStorage`, restored after a crash, revision check against other tabs. A stale backup is offered back as a new note.
 - Delete with Undo (soft delete). The open note is in the URL (`?note=`).
 - The page loads every note of the project at once, so switching is instant. Revisit if projects end up with hundreds.
+- **PDF:** "Download PDF" in a note's menu, and "Download All as PDF" above the list (empty notes left out, each note from a new page). Made in the browser like the script's PDF, in Geist like the app, laid out as the editor shows it: first line as the title, the project's name and page numbers at the foot. Paper size follows the browser's region (US Letter or A4); includes edits that haven't saved yet.
 
 Next:
 
@@ -424,7 +425,7 @@ lib/
   dal/           server-only data access; every function checks session and ownership
   screenplay/    TipTap nodes, keyboard flow, sceneId plugin, scene extraction,
                  Fountain import/export — shared by browser and server
-  notes/         note schema (TipTap StarterKit and checklists), plain-text rendering
+  notes/         note schema (TipTap StarterKit and checklists), plain-text rendering, PDF
   draft-saver.ts autosave for the script and notes: debounce, retry, localStorage backup
   shots/         shot types, label numbering, presets, grouping, CSV, the client shot store,
                  image uploader
@@ -454,7 +455,7 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | PDF | @react-pdf/renderer |
 | AI | AI SDK (`ai`, `@ai-sdk/react`) with the OpenRouter provider; streamdown for the assistant's replies |
 | Validation | zod |
-| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text |
+| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text, note PDF |
 
 S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` (not the `AWS_*` names, which Vercel reserves). `S3_ENDPOINT` is optional, for S3-compatible services such as MinIO, R2 or a local fake. AI writing needs `OPENROUTER_API_KEY`; the AI SDK packages need Node 22 or later.
 

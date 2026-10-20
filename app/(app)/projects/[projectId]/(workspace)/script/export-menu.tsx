@@ -24,15 +24,13 @@ import {
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadBlob, downloadText, safeFileName } from "@/lib/download";
+import { defaultPaper } from "@/lib/paper";
 import { toFountain } from "@/lib/screenplay/fountain";
 import { layoutScreenplay, PAPER_SIZES, type PaperSize } from "@/lib/screenplay/pagination";
 import type { ScreenplayDocJSON, TitlePage } from "@/lib/screenplay/types";
 import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
 
 const PDF_OPTIONS_KEY = "shotlist:script-pdf";
-
-/** Where US Letter is the usual paper size; A4 everywhere else. */
-const LETTER_REGIONS = new Set(["US", "CA", "MX", "PH", "CL", "CO", "VE", "PR", "GT", "CR", "PA", "DO", "SV", "NI"]);
 
 type PdfOptions = { paper: PaperSize; titlePage: boolean; sceneNumbers: boolean };
 
@@ -201,15 +199,6 @@ function parsePdfOptions(raw: string | null): PdfOptions {
     titlePage: saved.titlePage !== false,
     sceneNumbers: saved.sceneNumbers === true,
   };
-}
-
-function defaultPaper(): PaperSize {
-  try {
-    const region = new Intl.Locale(navigator.language).maximize().region;
-    return region && !LETTER_REGIONS.has(region) ? "a4" : "letter";
-  } catch {
-    return "letter";
-  }
 }
 
 function exportTitlePage(titlePage: TitlePage, projectTitle: string): TitlePage {

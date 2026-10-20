@@ -34,8 +34,6 @@ function registerFonts(baseUrl: string) {
       { src: `${baseUrl}/CourierPrime-BoldItalic.ttf`, fontWeight: "bold", fontStyle: "italic" },
     ],
   });
-  // Lines are already broken to fit, so react-pdf must never hyphenate them.
-  Font.registerHyphenationCallback((word) => [word]);
   fontsRegistered = true;
 }
 
@@ -47,6 +45,9 @@ export async function renderScreenplayPdf(
   fontBaseUrl = "/fonts/courier-prime",
 ): Promise<Blob> {
   registerFonts(fontBaseUrl);
+  // Lines are already broken to fit, so react-pdf must never hyphenate them. The callback is
+  // shared by every PDF, so it's set before each render.
+  Font.registerHyphenationCallback((word) => [word]);
   return pdf(<ScreenplayDocument layout={layout} info={info} />).toBlob();
 }
 

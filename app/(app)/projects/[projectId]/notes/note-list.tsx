@@ -1,10 +1,11 @@
 "use client";
 
 import { cn } from "cn";
-import { SquarePenIcon } from "lucide-react";
+import { DownloadIcon, SquarePenIcon } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { notePreview, noteTitle } from "@/lib/notes/text";
 
 import type { NoteState } from "./notes-workspace";
@@ -14,12 +15,14 @@ export function NoteList({
   selectedId,
   onSelect,
   onCreate,
+  onDownloadAll,
   className,
 }: {
   notes: NoteState[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
+  onDownloadAll: () => void;
   className?: string;
 }) {
   return (
@@ -34,10 +37,26 @@ export function NoteList({
         <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Notes <span className="ml-1 tabular-nums">{notes.length}</span>
         </h2>
-        <Button variant="ghost" size="sm" onClick={onCreate}>
-          <SquarePenIcon data-icon="inline-start" />
-          New Note
-        </Button>
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Download All as PDF"
+                disabled={!notes.some((note) => note.text)}
+                onClick={onDownloadAll}
+              >
+                <DownloadIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Download All as PDF</TooltipContent>
+          </Tooltip>
+          <Button variant="ghost" size="sm" onClick={onCreate}>
+            <SquarePenIcon data-icon="inline-start" />
+            New Note
+          </Button>
+        </div>
       </div>
       <ul className="flex-1 overflow-y-auto p-2">
         {notes.map((note) => (

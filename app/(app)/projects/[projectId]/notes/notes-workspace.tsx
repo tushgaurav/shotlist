@@ -8,11 +8,13 @@ import { toast } from "sonner";
 
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
+import { downloadBlob, safeFileName } from "@/lib/download";
 import { DraftSaver, readBackup, type SaveStatus } from "@/lib/draft-saver";
 import { newId } from "@/lib/id";
 import { parseNoteDoc } from "@/lib/notes/schema";
 import { noteText, noteTitle } from "@/lib/notes/text";
 import { emptyNote, type NoteData } from "@/lib/notes/types";
+import { defaultPaper } from "@/lib/paper";
 
 import { deleteNoteAction, restoreNoteAction } from "./actions";
 import { NoteEditor } from "./note-editor";
@@ -43,7 +45,15 @@ function newNote(doc?: ProseMirrorNode): NoteState {
   };
 }
 
-export function NotesWorkspace({ projectId, notes: loaded }: { projectId: string; notes: NoteData[] }) {
+export function NotesWorkspace({
+  projectId,
+  projectTitle,
+  notes: loaded,
+}: {
+  projectId: string;
+  projectTitle: string;
+  notes: NoteData[];
+}) {
   const [notes, setNotes] = useState<NoteState[]>(() => loaded.map((note) => ({ ...note, version: 0 })));
   const [statuses, setStatuses] = useState<Record<string, SaveStatus>>({});
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -249,6 +259,7 @@ export function NotesWorkspace({ projectId, notes: loaded }: { projectId: string
         selectedId={selected?.id ?? null}
         onSelect={select}
         onCreate={createNote}
+        onDownloadAll={() => void downloadNotesPdf(sorted, `${projectTitle} Notes`, projectTitle)}
         className={requested ? "max-md:hidden" : undefined}
       />
       {selected && (
@@ -259,12 +270,30 @@ export function NotesWorkspace({ projectId, notes: loaded }: { projectId: string
           autofocus={focusId === selected.id}
           onChange={changeNote}
           onDelete={() => deleteNote(selected)}
+          onDownload={() => void downloadNotesPdf([selected], noteTitle(selected.text), projectTitle)}
           onBack={() => select(null)}
           className={requested ? undefined : "max-md:hidden"}
         />
       )}
     </div>
   );
+}
+
+/** Downloads the notes that have anything in them as one PDF, as last edited here. */
+async function downloadNotesPdf(notes: NoteState[], title: string, projectTitle: string) {
+  const docs = notes.filter((note) => note.text).map((note) => note.doc ?? parseNoteDoc(note.content));
+  if (docs.length === 0) return;
+
+  const toastId = toast.loading("Creating PDF…");
+  try {
+    const { renderNotesPdf } = await import("@/lib/notes/pdf");
+    const blob = await renderNotesPdf(docs, { paper: defaultPaper(), title, projectTitle });
+    downloadBlob(blob, `${safeFileName(title, "Notes")}.pdf`);
+    toast.dismiss(toastId);
+  } catch (cause) {
+    console.error(cause);
+    toast.error("Couldn't create the PDF. Check your connection and try again.", { id: toastId });
+  }
 }
 
 /** The open note lives in the URL, so it survives reloads. */
