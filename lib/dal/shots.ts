@@ -6,7 +6,9 @@ import { db } from "@/lib/db";
 import { assets, projects, scenes, scripts, shots } from "@/lib/db/schema";
 import { blocksFromJSON } from "@/lib/screenplay/blocks";
 import { sceneCharacters } from "@/lib/screenplay/scenes";
+import { newId } from "@/lib/id";
 import { nextSuffix, suffixAt } from "@/lib/shots/numbering";
+import { positionBetween } from "@/lib/shots/positions";
 import {
   compareShots,
   type ShotListData,
@@ -215,6 +217,41 @@ export async function createShot(
       suffix,
     });
     return { ok: true, suffix };
+  });
+}
+
+/** A standalone shot at the end of the list, made from one of the project's images (e.g. on a mood board). */
+export async function createStandaloneShot(
+  projectId: string,
+  input: { imageId: string; description: string },
+): Promise<ShotMutation<{ id: string }>> {
+  return withProject<{ id: string }>(projectId, async (tx, scriptId) => {
+    const [image] = await tx
+      .select({ id: assets.id })
+      .from(assets)
+      .where(and(eq(assets.id, input.imageId), eq(assets.projectId, projectId)))
+      .limit(1);
+    if (!image) return invalid;
+
+    // Order keys compare as code units, which the database's collation may not, so pick the last here.
+    const standalone = await tx
+      .select({ position: shots.position })
+      .from(shots)
+      .where(and(eq(shots.projectId, projectId), isNull(shots.sceneId), isNull(shots.deletedAt)));
+    const last = standalone.reduce<string | null>((max, { position }) => (max === null || position > max ? position : max), null);
+
+    const id = newId();
+    await tx.insert(shots).values({
+      id,
+      projectId,
+      scriptId,
+      sceneId: null,
+      position: positionBetween(last, null),
+      suffix: null,
+      description: input.description,
+      imageId: input.imageId,
+    });
+    return { ok: true, id };
   });
 }
 

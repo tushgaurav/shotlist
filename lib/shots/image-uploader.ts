@@ -35,6 +35,40 @@ export type ImageUploaderOptions = {
   revokePreview: (url: string) => void;
 };
 
+/** Why a file can't be used as an image, before trying to decode it; null if it may be one. */
+export function checkImageFile(file: Blob): ImageUploadError | null {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return "not_image";
+  if (file.size > MAX_SOURCE_BYTES) return "too_large";
+  return null;
+}
+
+/** Uploads both copies of a prepared image straight to the bucket, then confirms them with the server. */
+export async function sendImage(
+  api: ImageUploadApi,
+  image: PreparedImage,
+): Promise<{ ok: true; assetId: string } | { ok: false; error: ImageUploadError }> {
+  try {
+    const started = await api.start(image.contentType);
+    if (!started.ok) return started;
+
+    const sent = await Promise.all([
+      api.send(started.forms.full, image.full),
+      api.send(started.forms.thumb, image.thumb),
+    ]);
+    if (!sent.every(Boolean)) return { ok: false, error: "rejected" };
+
+    const confirmed = await api.confirm({
+      assetId: started.assetId,
+      contentType: image.contentType,
+      width: image.width,
+      height: image.height,
+    });
+    return confirmed.ok ? { ok: true, assetId: started.assetId } : confirmed;
+  } catch {
+    return { ok: false, error: "offline" };
+  }
+}
+
 /**
  * Uploads shot images: resize in the browser, upload both copies straight to the bucket,
  * confirm with the server, then set the shot's image through the shot store.
@@ -71,8 +105,8 @@ export class ImageUploader {
   /** Resolves once the upload finished or failed. A second upload to the same shot is ignored meanwhile. */
   async upload(shotId: string, file: Blob) {
     if (this.uploads.has(shotId)) return;
-    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return this.fail("not_image");
-    if (file.size > MAX_SOURCE_BYTES) return this.fail("too_large");
+    const unusable = checkImageFile(file);
+    if (unusable) return this.fail(unusable);
 
     let image: PreparedImage;
     try {
@@ -85,28 +119,12 @@ export class ImageUploader {
     this.setUpload(shotId, preview);
     let kept = false;
     try {
-      const started = await this.api.start(image.contentType);
-      if (!started.ok) return this.fail(started.error);
+      const sent = await sendImage(this.api, image);
+      if (!sent.ok) return this.fail(sent.error);
 
-      const sent = await Promise.all([
-        this.api.send(started.forms.full, image.full),
-        this.api.send(started.forms.thumb, image.thumb),
-      ]);
-      if (!sent.every(Boolean)) return this.fail("rejected");
-
-      const confirmed = await this.api.confirm({
-        assetId: started.assetId,
-        contentType: image.contentType,
-        width: image.width,
-        height: image.height,
-      });
-      if (!confirmed.ok) return this.fail(confirmed.error);
-
-      this.previews.set(started.assetId, preview);
+      this.previews.set(sent.assetId, preview);
       kept = true;
-      this.store.update(shotId, { imageId: started.assetId });
-    } catch {
-      this.fail("offline");
+      this.store.update(shotId, { imageId: sent.assetId });
     } finally {
       this.setUpload(shotId, null);
       if (!kept) this.options.revokePreview(preview);

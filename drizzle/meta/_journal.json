@@ -57,6 +57,13 @@
       "when": 1792515710633,
       "tag": "0007_shares",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792675413713,
+      "tag": "0008_moodboards",
+      "breakpoints": true
     }
   ]
 }

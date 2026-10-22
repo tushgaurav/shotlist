@@ -6,8 +6,8 @@ import { PAPER_SIZES, type PaperSize } from "../screenplay/pagination";
 
 type Style = Styles[string];
 
-const SANS = "Geist";
-const MONO = "Geist Mono";
+export const SANS = "Geist";
+export const MONO = "Geist Mono";
 const POINTS_PER_INCH = 72;
 
 const INK = "#171717";
@@ -18,7 +18,8 @@ const LINK = "#0e7490";
 
 let fontsRegistered = false;
 
-function registerFonts(baseUrl: string) {
+/** Geist, as in the app. Mood board PDFs use it too. */
+export function registerFonts(baseUrl: string) {
   if (fontsRegistered) return;
   Font.register({
     family: SANS,

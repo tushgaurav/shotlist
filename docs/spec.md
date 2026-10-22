@@ -13,6 +13,8 @@ The connection is the point: every shot belongs to a scene, shots stay attached 
 
 Alongside them, **notes**: quick, free-form notes per project. Not every project starts with a script. Many (music videos, commercials, YouTube videos) start as a pile of ideas and references and go straight to shots. Notes give them somewhere to start, and will feed the AI writer (see 7a).
 
+And **mood boards**: the look of the project, gathered as images, text, color palettes and video links (see 7c).
+
 Built for one user first. Structured so it can become a multi-user product later without a rewrite.
 
 ### Goals for v1
@@ -38,6 +40,7 @@ Built for one user first. Structured so it can become a multi-user product later
 | Project type | A label for the kind of project, with an icon. Each user has their own list ("Short Film", "YouTube Video"…), seeded with four defaults at sign-up. |
 | Details | A project's optional metadata: logline, synopsis, genre, tone, target runtime, aspect ratio, language, and a header image. Everything but the image is given to the AI writer as context (see 5, AI writing). |
 | Note | A free-form note in a project: ideas, references, research, things to shoot. Its first line is its title. |
+| Mood board | A board of visual references in a project: images, text, color palettes and video links, in one to four columns. A project can have several (Locations, Wardrobe…). |
 | Share link | A read-only link to the script or a note, for people without an account. Optionally password protected, optionally open to comments. |
 | Script | The screenplay. Has one **working draft** (what you edit, autosaved) and many **versions**. |
 | Version | An immutable, named snapshot of the script, e.g. "Draft 2" or "Shooting Script". |
@@ -244,6 +247,31 @@ notes
   created_at          timestamptz
   updated_at          timestamptz -- last edit; deleting and restoring don't change it
 
+moodboards
+  id                  text pk     -- generated in the browser
+  project_id          text → projects.id
+  name                text
+  columns             integer     -- 1–4
+  position            text        -- order in the boards list
+  archived_at         timestamptz null
+  deleted_at          timestamptz null  -- soft delete, so Undo can bring a board back
+  created_at          timestamptz
+  updated_at          timestamptz -- also set by every item change
+
+moodboard_items
+  id                  text pk     -- generated in the browser, so creates can be retried safely
+  board_id            text → moodboards.id
+  position            text        -- one order for the whole board; columns are worked out from it
+  kind                text        -- image | text | palette | video_link
+  wide                boolean     -- spans every column; default false, true for new headings
+  asset_id            text → assets.id, null  -- image items; removed with their asset
+  caption             text null   -- image or video link caption, palette name
+  content             jsonb null  -- text: { text, style, align }; palette: { colors };
+                                  -- video link: { url, provider, title, thumbnailUrl, width, height }
+  deleted_at          timestamptz null  -- soft delete, so Undo can bring an item back
+  created_at          timestamptz
+  updated_at          timestamptz
+
 shares                              -- read-only links; one per script or note, kept when turned off
   id                  text pk
   project_id          text → projects.id
@@ -383,7 +411,7 @@ Built in two passes, both done. Pass 1 is the table; pass 2 adds images (Amazon 
 - The browser re-encodes every image first: a full copy up to 2048 px on the long edge and a thumbnail up to 640 px, as WebP (JPEG where the browser can't encode WebP), with transparency flattened onto white. Sources up to 40 MB and 20,000 px are accepted; SVG isn't.
 - **Upload:** a Server Action checks ownership and returns two presigned POST forms whose policy fixes the key and content type and caps the size (8 MB full, 1 MB thumbnail), valid for 10 minutes. The browser posts both files straight to S3, then a second action checks both objects are there with the right type and records the `assets` row. Confirming twice is harmless.
 - **Display:** `/api/assets/[assetId]/[variant]` checks ownership and redirects to a signed S3 URL. URLs are signed at the start of each hour and valid for two, so the same URL (and the browser's cached copy) is reused all hour; the redirect is `private` and cached until the next hour starts.
-- The bucket stays private. It needs a CORS rule allowing POST from the app's origin, and the app's IAM user needs `s3:PutObject` and `s3:GetObject` on the bucket's objects. Without the S3 settings the app still runs and says image uploads aren't set up.
+- The bucket stays private. It needs a CORS rule allowing POST from the app's origin (and GET, for mood board PDFs and palettes, see 7c), and the app's IAM user needs `s3:PutObject` and `s3:GetObject` on the bucket's objects. Without the S3 settings the app still runs and says image uploads aren't set up.
 
 ### Script side panel
 
@@ -445,6 +473,67 @@ Next:
 - Comments beside the script and notes editors, not only on the shared page.
 - Expiry dates, and a Download PDF option for readers.
 
+## 7c. Mood boards
+
+Built (v1). Visual references for a project: the look, the locations, the wardrobe, a clip to borrow a camera move from. A project has several boards, each a grid of images, text, color palettes and video links.
+
+Other tools nest boards (a "Western Ghosts" board with Characters, Locations and Costume under it). Here the project plays that top-level part, so boards aren't nested; a board gets sections from full-width headings.
+
+**Boards**
+
+- A Mood Boards section in the project nav, after Notes. Two panes, like Notes: the boards list (a thumbnail from the board's first image, the name, the item count) and the open board. Phones show one pane at a time. The open board is in the URL (`?board=`).
+- "New Board" adds "Untitled Board", opens it and selects the name. Rename in place; drag to reorder the list. A search field above the list filters boards by name, captions and text.
+- Board menu: Rename, Duplicate, Archive, Delete with Undo (soft delete). Duplicate copies the items; images point at the same assets, so nothing is copied in S3. Archived boards wait in a collapsed "Archived" group at the end of the list until they're unarchived.
+- Toolbar: image count, Add (Image, Text, Palette, Video Link), columns 1–4, Download PDF, board menu.
+- The page loads every board and item of the project at once, as Notes does.
+
+**Layout**
+
+- Each board has one to four columns (default 3). Narrow screens show fewer, at most 2 on phones.
+- Items have one order. Each item, in that order, goes into the column that is currently shortest, so the board reads left to right. Images and video thumbnails are placed from their stored size, so nothing jumps while they load; text and palettes are measured once drawn.
+- Any item can be full width. It starts below the tallest column, and the items after it start a fresh row of columns. A full-width heading is how a board gets sections ("Locations", "Wardrobe").
+- Changing the column count only reflows the board; the order stays.
+
+Why not CSS columns: they fill one column top to bottom before starting the next, so the order on screen wouldn't match the stored order and drops would land in the wrong place.
+
+**Items**
+
+- **Image.** Pick (several at once), paste, or drop files on the board; between two items inserts them there. Uploaded the way shot images are (re-encoded in the browser, presigned POST, an `assets` row, signed URLs), with the same limits and a local preview while it uploads. Optional caption. Clicking opens a viewer with the full-size image, its caption, and arrows to the board's other images. Animated GIFs arrive as still images, because every image is re-encoded.
+- **Images from project.** A picker of the images already in the project (shot images, the header image, other boards), to reuse a reference without uploading it again. Images already on the board are dimmed.
+- **Text.** Plain text in one of four styles (Title, Heading, Body, Quote), left-aligned or centered. The Add menu offers Heading and Text; the item menu switches the style. New headings are full width. Edited in place, saved like shot cells. A text box left empty is removed when it loses focus.
+- **Palette.** A row of 1 to 8 colors with an optional name ("Dusk exteriors"). Add colors with a picker or a hex code; clicking a swatch copies its hex code. An image's menu has "Extract palette", which adds a palette of the image's five main colors right after it.
+- **Video link.** Paste a YouTube or Vimeo URL on the board, or use Add › Video Link. The server (`GET /api/video-links`, a Route Handler so a slow site doesn't hold up saves) looks up the title, thumbnail and size from the site's oEmbed endpoint (a fixed host per site, so the URL can't point the server anywhere else) and stores them on the item. If it can't, YouTube's thumbnail is still known from the video ID. The card shows the thumbnail with a play mark; clicking plays it in the viewer (YouTube through `youtube-nocookie.com`). Any other URL becomes a plain link card with the site's name; the server doesn't fetch it.
+
+**Editing**
+
+- Drag items to reorder them, or onto a board in the list to move them there. **Alt+arrows** move the focused item, as in the storyboard; **Esc** leaves a text item.
+- Item menu: caption, full width on or off, duplicate, move to board, delete with Undo. Images also have Extract Palette, Use as Header Image, New Shot from Image, and Download.
+- **New Shot from Image** makes a standalone shot with the image, and the caption as its description. The toast links to it in the shot list.
+
+**Saving**
+
+Like the shot list: changes show at once, text edits are saved about 0.7 s after typing stops, and adds, moves and deletes go through one queue in order, with the same retries, statuses and leave-page warning. Item IDs come from the browser, so a retried create is harmless.
+
+**PDF**
+
+"Download PDF" in the toolbar: the board's and the project's names at the top, then the items in the board's order and column count, in rows (a row never splits across pages; full-width items get a row to themselves). Captions under images, palettes as swatches with their hex codes, video links as their thumbnail with the URL beneath. The project's name and page numbers at the foot; paper size from the browser's region, as for notes. Images are re-encoded as JPEG in the browser (react-pdf can't read WebP); any that can't be loaded show as placeholders, with a warning.
+
+The PDF and Extract Palette read images in the browser, so the bucket's CORS rule must allow GET from the app's origin as well as POST.
+
+**Not in v1**
+
+- Uploading video files: a video kind of asset, a poster frame taken in the browser, playback through signed URLs.
+- Adding images by dragging them in from other websites. The browser gets a URL rather than a file, so the server would have to fetch it, guarded against SSRF.
+
+**Next**
+
+- Share links for a board (`shares.moodboard_id`), with comments on items.
+- The AI assistant reading a board as context ("write this scene in the mood of the Locations board").
+- Text colors and fonts.
+- A library across projects: search every project's images and reuse them.
+- Webcam capture.
+- Linking boards or items to scenes, shown beside the script and the shot list.
+
 ## 8. Shoot-day planning
 
 - Create days (label, optional date, call and wrap time).
@@ -460,8 +549,9 @@ Next:
 app/
   (auth)/sign-in/page.tsx
   (app)/projects/page.tsx                              project list
-  (app)/projects/[projectId]/layout.tsx                project nav: Notes · Script · Shots · Schedule · Details
+  (app)/projects/[projectId]/layout.tsx                project nav: Notes · Mood Boards · Script · Shots · Schedule · Details
   (app)/projects/[projectId]/notes/page.tsx            notes list and editor (?note=)
+  (app)/projects/[projectId]/moodboards/page.tsx       boards list and the open board (?board=)
   (app)/projects/[projectId]/script/page.tsx           editor
   (app)/projects/[projectId]/script/versions/page.tsx  history and compare (?a=&b=)
   (app)/projects/[projectId]/shots/page.tsx            table or storyboard
@@ -474,6 +564,7 @@ app/
   api/scripts/[scriptId]/draft/route.ts                autosave
   api/projects/[projectId]/notes/[noteId]/route.ts     note autosave; the first save creates the note
   api/assets/[assetId]/[variant]/route.ts              image redirect to S3 (owner only)
+  api/video-links/route.ts                             a link's card details for a mood board (oEmbed)
   api/projects/[projectId]/export/route.ts             PDF, Fountain
   api/projects/[projectId]/ai/{write,outline,chat,complete}/route.ts
                                                        AI writing (streamed lines, outline, assistant, inline)
@@ -487,6 +578,8 @@ lib/
   screenplay/    TipTap nodes, keyboard flow, sceneId plugin, scene extraction,
                  Fountain import/export — shared by browser and server
   notes/         note schema (TipTap StarterKit and checklists), plain-text rendering, PDF
+  moodboards/    item types, column layout, palette extraction, video link parsing,
+                 the client board store, PDF
   share/         share types, read-only rendering from the editors' schemas, comment
                  anchoring (text quotes, and their DOM ranges)
   draft-saver.ts autosave for the script and notes: debounce, retry, localStorage backup
@@ -518,7 +611,7 @@ proxy.ts         optimistic redirect to sign-in only (Next 16's name for middlew
 | PDF | @react-pdf/renderer |
 | AI | AI SDK (`ai`, `@ai-sdk/react`) with the OpenRouter provider; streamdown for the assistant's replies |
 | Validation | zod |
-| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text, note PDF, comment anchoring, shared-page rendering |
+| Tests | Vitest — scene extraction, sceneId plugin, Fountain round-trip, diff, shot numbering, shot store, image uploader, AI suggestions, inline suggestions, script context, autosave, note text, note PDF, comment anchoring, shared-page rendering, mood board layout, board store, board uploads, palettes, video links |
 
 S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` (not the `AWS_*` names, which Vercel reserves). `S3_ENDPOINT` is optional, for S3-compatible services such as MinIO, R2 or a local fake. AI writing needs `OPENROUTER_API_KEY`; the AI SDK packages need Node 22 or later.
 
@@ -536,6 +629,8 @@ S3 settings come from `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID` and `S3_SECRE
 Added between 4 and 5: **Notes** (see 7a). Basic version done: notes section, editor, autosave. Next: Draft from Notes, Turn into shots.
 
 Also added: **Share links** (see 7b), read-only links to the script or a note, with optional passwords and comments.
+
+Also added: **Mood boards** (see 7c), boards of images, text, color palettes and video links.
 
 After v1, if it becomes a product: project members and roles, real-time co-editing (Yjs), script breakdown, call sheets, Final Draft import.
 
