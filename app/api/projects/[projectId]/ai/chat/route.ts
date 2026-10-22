@@ -11,11 +11,13 @@ import {
 import type { NextRequest } from "next/server";
 
 import type { AssistantMessage, ProposeEditOutput } from "@/lib/ai/chat";
+import { resolveAttachments } from "@/lib/ai/chat-attachments";
 import { scriptContext, withoutDetails } from "@/lib/ai/context";
 import { chatInstructions } from "@/lib/ai/prompts";
 import { languageModel } from "@/lib/ai/provider";
 import { describeAiError, prepareAiRequest, textError } from "@/lib/ai/route";
 import { chatRequestSchema, proposeEditInputSchema } from "@/lib/ai/schema";
+import { attachmentStore } from "@/lib/dal/ai";
 
 export const maxDuration = 120;
 
@@ -53,11 +55,13 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/project
   if (!validated.success) {
     return textError(400, "This conversation couldn't be read. Start a new chat and try again.");
   }
+  // Images and PDFs go to the model as signed URLs it fetches itself; text files are read here.
+  const messages = await resolveAttachments(validated.data, projectId, attachmentStore(projectId));
 
   const result = streamText({
     model: languageModel(body.model),
     instructions: chatInstructions(project, script),
-    messages: await convertToModelMessages(validated.data, { tools, ignoreIncompleteToolCalls: true }),
+    messages: await convertToModelMessages(messages, { tools, ignoreIncompleteToolCalls: true }),
     tools,
     stopWhen: isStepCount(4),
     temperature: 0.7,

@@ -75,6 +75,19 @@ export async function statObject(key: string) {
   }
 }
 
+/** A stored object's bytes, or null if it isn't there. */
+export async function readObject(key: string) {
+  const { client, bucket } = requireStorage();
+  try {
+    const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    return object.Body ? await object.Body.transformToByteArray() : null;
+  } catch (error) {
+    const status = error instanceof S3ServiceException ? error.$metadata.httpStatusCode : undefined;
+    if (status === 404 || status === 403) return null;
+    throw error;
+  }
+}
+
 const URL_WINDOW_SECONDS = 60 * 60;
 
 /**

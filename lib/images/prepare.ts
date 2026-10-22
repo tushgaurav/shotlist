@@ -1,4 +1,5 @@
 import { AVATAR_MAX_BYTES, AVATAR_SIZE } from "@/lib/account";
+import { ATTACHMENT_IMAGE_EDGE, ATTACHMENT_MAX_BYTES } from "@/lib/ai/attachments";
 import {
   fitWithin,
   MAX_IMAGE_EDGE,
@@ -87,6 +88,19 @@ export async function prepareAvatar(file: Blob): Promise<{ contentType: ImageTyp
     const { canvas, context } = blankCanvas(size, size);
     context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, size, size);
     return { contentType, blob: await encodeWithin(canvas, contentType, AVATAR_MAX_BYTES) };
+  } finally {
+    bitmap.close();
+  }
+}
+
+/** An image attached in the assistant's chat: one copy, small enough for the model to take. */
+export async function prepareAttachmentImage(file: Blob): Promise<{ contentType: ImageType; blob: Blob }> {
+  const bitmap = await createImageBitmap(file);
+  try {
+    if (Math.max(bitmap.width, bitmap.height) > MAX_IMAGE_EDGE) throw new ImageTooLargeError();
+    const contentType: ImageType = (await canEncodeWebp()) ? "image/webp" : "image/jpeg";
+    const canvas = draw(bitmap, bitmap.width, bitmap.height, ATTACHMENT_IMAGE_EDGE);
+    return { contentType, blob: await encodeWithin(canvas, contentType, ATTACHMENT_MAX_BYTES[contentType]) };
   } finally {
     bitmap.close();
   }

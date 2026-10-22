@@ -291,6 +291,7 @@ export function ScriptWorkspace({
             writer={writer}
             projectId={projectId}
             details={ai.details}
+            uploadsEnabled={imagesEnabled}
             onClose={() => setAssistantOpen(false)}
           />
         )}

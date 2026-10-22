@@ -141,6 +141,8 @@ export function chatInstructions(project: AiProject, script: ScriptContext) {
 
 You're the writing assistant in the panel beside the script editor. Answer questions about the script and the project, give notes, and brainstorm. Be specific and brief: refer to scenes by number, quote short lines when it helps, and use markdown lightly (short lists, no headings).
 
+The writer can attach images (reference photos, storyboards, screenshots), PDFs and text files to their messages; text files come inside <attachment> tags. Treat them as reference for the project, not as part of the script.
+
 ${scriptBlock(script)}${castLine(script)}${cursor}
 ${index ? `\nScene index:\n${index}` : ""}
 

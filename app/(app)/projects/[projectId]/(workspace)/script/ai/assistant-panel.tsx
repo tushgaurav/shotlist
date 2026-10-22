@@ -2,12 +2,23 @@
 
 import { useChat } from "@ai-sdk/react";
 import type { Editor } from "@tiptap/react";
-import { DefaultChatTransport } from "ai";
-import { ArrowUpIcon, CheckIcon, CopyIcon, MessageSquarePlusIcon, PencilIcon, RotateCwIcon, SquareIcon, XIcon } from "lucide-react";
+import { DefaultChatTransport, type FileUIPart } from "ai";
+import {
+  ArrowUpIcon,
+  CheckIcon,
+  CopyIcon,
+  MessageSquarePlusIcon,
+  PaperclipIcon,
+  PencilIcon,
+  RotateCwIcon,
+  SquareIcon,
+  XIcon,
+} from "lucide-react";
 import {
   useEffect,
   useRef,
   useState,
+  type DragEvent as ReactDragEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -19,17 +30,21 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ATTACHMENT_ACCEPT } from "@/lib/ai/attachments";
 import type { AssistantMessage } from "@/lib/ai/chat";
+import { hasFiles } from "@/lib/images/prepare";
 import type { ScriptSnapshot } from "@/lib/ai/schema";
 import { insertionPoint, insertionRange, isBlankDoc, scriptSnapshot } from "@/lib/screenplay/editor/ai-ranges";
 import { committedDoc } from "@/lib/screenplay/editor/ai-suggestion";
 import { useLocalStorage, writeLocalStorage } from "@/lib/use-local-storage";
 
+import { AttachmentTray, MessageAttachments } from "./attachments";
 import { DetailsChip } from "./details-chip";
 import { EditCard } from "./edit-card";
 import { ModelSelect } from "./model-select";
 import { useAiModel, useProjectDetails } from "./use-ai-model";
 import type { AiWriter } from "./use-ai-writer";
+import { useAttachments } from "./use-attachments";
 
 const KEPT_MESSAGES = 60;
 
@@ -38,6 +53,8 @@ type ChatProps = {
   writer: AiWriter;
   projectId: string;
   details: string[];
+  /** Whether S3 is set up, which attachments need. */
+  uploadsEnabled: boolean;
   onClose: () => void;
   /** Called after an edit is shown in the script, e.g. to uncover the page. */
   onReviewed?: () => void;
@@ -185,6 +202,15 @@ function messageText(message: AssistantMessage) {
   return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
 }
 
+function messageFiles(message: AssistantMessage) {
+  return message.parts.filter((part): part is FileUIPart => part.type === "file");
+}
+
+/** The text comes first: OpenRouter suggests putting the prompt before the images. */
+function userParts(text: string, files: FileUIPart[]): AssistantMessage["parts"] {
+  return [...(text ? [{ type: "text" as const, text }] : []), ...files];
+}
+
 function QuietIconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
   return (
     <Tooltip>
@@ -257,6 +283,8 @@ function MessageEditor({ initial, onCancel, onSubmit }: { initial: string; onCan
 
 function UserTurn({
   text,
+  files,
+  previewFor,
   editing,
   busy,
   onEdit,
@@ -265,6 +293,8 @@ function UserTurn({
   onResend,
 }: {
   text: string;
+  files: FileUIPart[];
+  previewFor: (url: string) => string | undefined;
   editing: boolean;
   busy: boolean;
   onEdit: () => void;
@@ -279,7 +309,15 @@ function UserTurn({
     if (copiedTimer.current !== null) window.clearTimeout(copiedTimer.current);
   }, []);
 
-  if (editing) return <MessageEditor initial={text} onCancel={onCancel} onSubmit={onSubmit} />;
+  const attachments = files.length > 0 && <MessageAttachments parts={files} previewFor={previewFor} />;
+  if (editing) {
+    return (
+      <div className="flex flex-col items-end gap-1.5">
+        {attachments}
+        <MessageEditor initial={text} onCancel={onCancel} onSubmit={onSubmit} />
+      </div>
+    );
+  }
 
   const copy = () => {
     const done = () => {
@@ -295,12 +333,15 @@ function UserTurn({
   };
 
   return (
-    <div className="group/turn flex max-w-full flex-col items-end self-end">
-      <div className="ml-8 rounded-2xl rounded-br-md bg-primary/10 px-3 py-2 text-sm whitespace-pre-wrap">{text}</div>
-      <div className="mt-0.5 flex h-6 items-center justify-end gap-0.5 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/turn:opacity-100 [@media(hover:hover)]:group-focus-within/turn:opacity-100">
-        <QuietIconButton label="Copy" onClick={copy}>
-          {copied ? <CheckIcon /> : <CopyIcon />}
-        </QuietIconButton>
+    <div className="group/turn flex max-w-full flex-col items-end gap-1.5 self-end">
+      {attachments}
+      {text && <div className="ml-8 rounded-2xl rounded-br-md bg-primary/10 px-3 py-2 text-sm whitespace-pre-wrap">{text}</div>}
+      <div className="-mt-1 flex h-6 items-center justify-end gap-0.5 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/turn:opacity-100 [@media(hover:hover)]:group-focus-within/turn:opacity-100">
+        {text && (
+          <QuietIconButton label="Copy" onClick={copy}>
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </QuietIconButton>
+        )}
         {!busy && (
           <QuietIconButton label="Resend" onClick={onResend}>
             <RotateCwIcon />
@@ -332,7 +373,7 @@ function starters(blank: boolean) {
   ];
 }
 
-function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed }: ChatProps) {
+function AssistantChat({ editor, writer, projectId, details, uploadsEnabled, onClose, onReviewed }: ChatProps) {
   const [model] = useAiModel();
   const [projectDetails] = useProjectDetails();
   const [transport] = useState(
@@ -361,7 +402,10 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
 
   const [input, setInput] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const attachments = useAttachments(projectId, uploadsEnabled);
+  const [dropping, setDropping] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
 
@@ -375,24 +419,46 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
     if (element && stick.current) element.scrollTop = element.scrollHeight;
   }, [messages, status]);
 
+  const canSend = (input.trim() !== "" || attachments.ready) && !attachments.uploading;
+
+  // Sends the files in the composer too, so a message can be just an image.
   const send = (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || busy) return;
+    if ((!trimmed && !attachments.ready) || attachments.uploading || busy) return;
     clearError();
     stick.current = true;
     setInput("");
     setEditingId(null);
-    void sendMessage({ text: trimmed }, requestBody());
+    void sendMessage({ parts: userParts(trimmed, attachments.take()) }, requestBody());
   };
 
-  // Drops every reply after this message, then asks again. Editing replaces the message first.
-  const resend = (messageId: string, text?: string) => {
+  // Drops every reply after this message, then asks again. Editing replaces the text and keeps the files.
+  const resend = (message: AssistantMessage, text?: string) => {
     if (busy) return;
     clearError();
     stick.current = true;
     setEditingId(null);
-    if (text === undefined) void regenerate({ messageId, ...requestBody() });
-    else void sendMessage({ text, messageId }, requestBody());
+    if (text === undefined) void regenerate({ messageId: message.id, ...requestBody() });
+    else void sendMessage({ parts: userParts(text, messageFiles(message)), messageId: message.id }, requestBody());
+  };
+
+  const dropHandlers = {
+    onDragOver: (event: ReactDragEvent<HTMLElement>) => {
+      if (!hasFiles(event.dataTransfer)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      setDropping(true);
+    },
+    onDragLeave: (event: ReactDragEvent<HTMLElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDropping(false);
+    },
+    onDrop: (event: ReactDragEvent<HTMLElement>) => {
+      if (!hasFiles(event.dataTransfer)) return;
+      event.preventDefault();
+      setDropping(false);
+      attachments.add([...event.dataTransfer.files]);
+      inputRef.current?.focus();
+    },
   };
 
   const newChat = () => {
@@ -407,7 +473,12 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
   const last = messages.at(-1);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col" {...dropHandlers}>
+      {dropping && (
+        <div className="pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-background/85 text-sm font-medium">
+          {uploadsEnabled ? "Drop to Attach" : "File uploads aren't set up"}
+        </div>
+      )}
       <div className="flex items-center gap-1 border-b py-2 pr-2 pl-4">
         <h2 className="flex-1 text-sm font-medium">Assistant</h2>
         <Tooltip>
@@ -440,6 +511,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
               <p className="mt-1 text-sm text-muted-foreground">
                 The assistant reads the whole script and your project details. Ask for notes or
                 ideas, or ask it to write; edits show up in the script for you to accept.
+                {uploadsEnabled && " Attach, paste or drop in images, PDFs and notes for reference."}
               </p>
             </div>
             <div className="flex flex-col items-start gap-1.5">
@@ -462,12 +534,14 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
                 <UserTurn
                   key={message.id}
                   text={messageText(message)}
+                  files={messageFiles(message)}
+                  previewFor={attachments.previewFor}
                   editing={editingId === message.id}
                   busy={busy}
                   onEdit={() => setEditingId(message.id)}
                   onCancel={() => setEditingId(null)}
-                  onSubmit={(text) => resend(message.id, text)}
-                  onResend={() => resend(message.id)}
+                  onSubmit={(text) => resend(message, text)}
+                  onResend={() => resend(message)}
                 />
               ) : (
                 <div key={message.id} className="text-sm">
@@ -515,6 +589,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
         }}
       >
         <div className="rounded-xl border bg-card focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30">
+          <AttachmentTray items={attachments.items} onRemove={attachments.remove} />
           <textarea
             ref={inputRef}
             value={input}
@@ -525,6 +600,14 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
                 send(input);
               }
             }}
+            onPaste={(event) => {
+              // Screenshots and copied images are attached. Text pastes as usual, even when it
+              // comes with a picture of itself (as cells copied from a spreadsheet do).
+              const files = [...event.clipboardData.files];
+              if (files.length === 0 || event.clipboardData.types.includes("text/plain")) return;
+              event.preventDefault();
+              attachments.add(files);
+            }}
             rows={2}
             maxLength={8000}
             placeholder={blank ? "Ask anything about the project…" : "Ask about the script, or ask for a change…"}
@@ -532,6 +615,35 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
             className="field-sizing-content block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-2.5 text-sm outline-none placeholder:text-muted-foreground"
           />
           <div className="@container/ai-controls flex items-center gap-1 px-1.5 pb-1.5">
+            <input
+              ref={fileInput}
+              type="file"
+              multiple
+              accept={ATTACHMENT_ACCEPT}
+              hidden
+              tabIndex={-1}
+              onChange={(event) => {
+                const files = [...(event.target.files ?? [])];
+                event.target.value = "";
+                attachments.add(files);
+                inputRef.current?.focus();
+              }}
+            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground"
+                  aria-label="Attach Files"
+                  onClick={() => attachments.require() && fileInput.current?.click()}
+                >
+                  <PaperclipIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Attach Images, PDFs or Text Files</TooltipContent>
+            </Tooltip>
             <ModelSelect />
             <DetailsChip details={details} />
             {busy ? (
@@ -539,7 +651,7 @@ function AssistantChat({ editor, writer, projectId, details, onClose, onReviewed
                 <SquareIcon className="fill-current" />
               </Button>
             ) : (
-              <Button type="submit" size="icon-sm" className="ml-auto" aria-label="Send" disabled={!input.trim()}>
+              <Button type="submit" size="icon-sm" className="ml-auto" aria-label="Send" disabled={!canSend}>
                 <ArrowUpIcon />
               </Button>
             )}

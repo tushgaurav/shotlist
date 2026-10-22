@@ -26,7 +26,8 @@ function assetKey(projectId: string, assetId: string, variant: ImageVariant, typ
   return `projects/${projectId}/assets/${assetId}/${variant}.${type === "image/webp" ? "webp" : "jpg"}`;
 }
 
-async function ownsProject(projectId: string) {
+/** null when the signed-in user owns the project, otherwise the error to return. */
+export async function ownsProject(projectId: string) {
   const user = await getCurrentUser();
   if (!user) return unauthorized;
   const [project] = await db
