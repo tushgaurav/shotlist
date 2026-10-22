@@ -45,6 +45,7 @@ import { ModelSelect } from "./model-select";
 import { useAiModel, useProjectDetails } from "./use-ai-model";
 import type { AiWriter } from "./use-ai-writer";
 import { useAttachments } from "./use-attachments";
+import { WorkingIndicator } from "./working-indicator";
 
 const KEPT_MESSAGES = 60;
 
@@ -204,6 +205,14 @@ function messageText(message: AssistantMessage) {
 
 function messageFiles(message: AssistantMessage) {
   return message.parts.filter((part): part is FileUIPart => part.type === "file");
+}
+
+/** Whether a reply is visibly moving: its text is arriving, or an edit card is being written. */
+function replyIsMoving(message: AssistantMessage) {
+  const part = message.parts.findLast((candidate) => candidate.type !== "step-start");
+  if (part?.type === "text") return part.text.trim() !== "";
+  if (part?.type === "tool-proposeEdit") return part.state === "input-streaming" || part.state === "input-available";
+  return false;
 }
 
 /** The text comes first: OpenRouter suggests putting the prompt before the images. */
@@ -565,9 +574,8 @@ function AssistantChat({ editor, writer, projectId, details, uploadsEnabled, onC
                 </div>
               ),
             )}
-            {status === "submitted" && (
-              <p className="animate-pulse text-sm text-muted-foreground">Reading the script…</p>
-            )}
+            {/* Mounted for the whole reply so the verb and timer carry over; hidden while the reply visibly moves. */}
+            {busy && <WorkingIndicator hidden={status === "streaming" && last?.role === "assistant" && replyIsMoving(last)} />}
             {error && !busy && (
               <div role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm">
                 <p className="flex-1 text-destructive">{error.message || "Something went wrong. Try again."}</p>
