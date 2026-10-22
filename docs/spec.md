@@ -332,6 +332,7 @@ Optional; on when `OPENROUTER_API_KEY` is set. Inference goes through OpenRouter
 - **Write (Cmd/Ctrl+K):** a composer at the cursor with suggestions for the line you're on (continue the scene, add dialogue, write the next scene), or for the selected lines (tighten, punch up the dialogue, make it more visual). Recent prompts are remembered.
 - **Draft from details:** plan the scenes first (an editable outline sized to the target runtime), then write them one by one. Offered on an empty script, and from the AI menu to add scenes to the end.
 - **Assistant (Cmd/Ctrl+J):** a chat in a sidebar beside the page, in the slot the shot panel uses, so the script stays editable while it's open. Drag its left edge to resize it (arrow keys work on the handle; double-click resets); the width is remembered per browser. On narrow screens it covers the page instead. It reads the whole script and can propose edits (rewrite scene N, add after scene N, insert at the cursor), which show as cards you can review in the script. Each project's conversation is kept in the browser.
+  - **Attachments:** pick, paste or drop images, PDFs and text files (`.txt`, `.md`, `.fountain`, `.fdx`, …), up to 8 per message. Like shot images they need S3: the browser shrinks images (2000 px, WebP or JPEG), sends text as UTF-8, and posts each file straight to the bucket under `chat/<projectId>/`, its own prefix so a lifecycle rule can expire chat files. Messages keep `/api/projects/[projectId]/ai/attachments/[file]`, which redirects the owner to a signed URL. The chat route hands images and PDFs to OpenRouter as signed S3 URLs (keys end in an image extension, or the AI SDK would download them instead) and inlines text files. Only the newest 20 files, up to 24 MB, go with a request; older or missing ones become a note to the model.
 - **Inline suggestions:** grey text continuing an action or dialogue line after a short pause. Tab accepts, typing the same letters keeps the rest, Esc dismisses. Uses a small, fast model; can be turned off in the AI menu.
 
 Written lines stream into the page tinted, with a rule in the margin, and nothing is saved until you accept. Cmd/Ctrl+Enter or typing in them keeps them, Esc discards them (or stops writing), and "Ask for changes" revises them. Accepting is one undo step. A rewritten scene keeps its scene ID, so its shots stay attached; autosave always saves the script without the pending lines.
@@ -476,6 +477,8 @@ app/
   api/projects/[projectId]/export/route.ts             PDF, Fountain
   api/projects/[projectId]/ai/{write,outline,chat,complete}/route.ts
                                                        AI writing (streamed lines, outline, assistant, inline)
+  api/projects/[projectId]/ai/attachments/[file]/route.ts
+                                                       chat attachment redirect to S3 (owner only)
 lib/
   ai/            models, prompts, the script context builder, request schemas, OpenRouter provider
   db/            Drizzle schema and client
